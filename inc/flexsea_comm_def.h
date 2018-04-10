@@ -85,6 +85,10 @@ extern "C" {
 #define P_CMDS							2		//Number of Commands sent
 #define P_CMD1							3		//First command
 #define P_DATA1							4		//First data
+// for David's multi packet protocol
+#define P_TIMESTAMP						2
+#define P_CMD							3
+#define P_DATA							4		//First data
 
 //Parser definitions:
 #define PARSE_DEFAULT					0

@@ -79,6 +79,9 @@ typedef enum {
 extern void (*flexsea_payload_ptr[MAX_CMD_CODE][RX_PTYPE_MAX_INDEX+1]) \
 				(uint8_t *buf, uint8_t *info);
 
+extern void (*flexsea_multipayload_ptr[MAX_CMD_CODE][RX_PTYPE_MAX_INDEX+1]) \
+				(uint8_t *msgBuf, uint8_t *info, uint8_t *responseBuf, uint16_t* responseLen);
+
 //****************************************************************************
 // Macro(s):
 //****************************************************************************

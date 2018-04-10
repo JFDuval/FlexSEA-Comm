@@ -50,15 +50,6 @@ uint8_t comm_gen_str(uint8_t payload[], uint8_t *cstr, uint8_t bytes);
 int8_t unpack_payload(uint8_t *buf, uint8_t *packed, uint8_t rx_cmd[PACKAGED_PAYLOAD_LEN]);
 uint16_t unpack_payload_cb(circularBuffer_t *cb, uint8_t *packed, uint8_t rx_cmd[PACKAGED_PAYLOAD_LEN]);
 
-/*
-int8_t unpack_payload_1(void);
-int8_t unpack_payload_2(void);
-int8_t unpack_payload_3(void);
-int8_t unpack_payload_4(void);
-int8_t unpack_payload_5(void);
-int8_t unpack_payload_6(void);
-*/
-
 //int8_t unpack_payload_test(uint8_t *buf, uint8_t *packed, uint8_t rx_cmd[PACKAGED_PAYLOAD_LEN]);
 
 //Random numbers and arrays:

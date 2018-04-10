@@ -52,7 +52,6 @@ uint8_t lastPayloadParsed[2] = {0, 0};
 // Private Function Prototype(s):
 //****************************************************************************
 
-static uint8_t get_rid(uint8_t *pldata);
 static void route(PacketWrapper * p, PortType to);
 
 //****************************************************************************
@@ -184,39 +183,6 @@ uint8_t packetType(uint8_t *buf)
 	return RX_PTYPE_INVALID;
 }
 
-//Do you have bytes ready? Can they be unpacked? Let's give it a shot.
-uint8_t tryUnpacking(CommPeriph *cp, PacketWrapper *pw)
-{
-	uint8_t retVal = 0;
-
-	if(cp->rx.bytesReadyFlag > 0)
-	{
-		//Try unpacking. This is the only way to know if we have a packet and
-		//not just random bytes, or an incomplete packet.
-		int8_t result = unpack_payload( \
-				cp->rx.inputBufferPtr, \
-				cp->rx.packedPtr, \
-				cp->rx.unpackedPtr);
-
-		if(result > 0)
-			cp->rx.unpackedPacketsAvailable = result;
-		else
-			cp->rx.unpackedPacketsAvailable = 0;
-
-		if(cp->rx.unpackedPacketsAvailable > 0)
-		{
-			//Transition from CommInterface to PacketWrapper:
-			fillPacketFromCommPeriph(cp, pw);
-			retVal = 1;
-		}
-
-		//Drop flag
-		cp->rx.bytesReadyFlag = 0;
-	}
-
-	return retVal;
-}
-
 // Using these ifdefs is a non ideal approach
 // plan should refactor to use Manage's tryParseRx
 // done this way so that this commit doesn't break plan, but it should be removed ASAP (ToDo)
@@ -328,7 +294,7 @@ static void route(PacketWrapper * p, PortType to)
 }
 
 //Is it addressed to me? To a board "below" me? Or to my Master?
-static uint8_t get_rid(uint8_t *pldata)
+uint8_t get_rid(uint8_t *pldata)
 {
 	uint8_t cp_rid = pldata[P_RID];
 	uint8_t i = 0;

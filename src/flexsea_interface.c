@@ -37,8 +37,10 @@ extern "C" {
 
 #include "flexsea.h"
 #include "flexsea_comm.h"
+#include "flexsea_comm_multi.h"
 #include "flexsea_payload.h"
 #include "flexsea_circular_buffer.h"
+#include "usbd_cdc_if.h"
 
 //****************************************************************************
 // Variable(s)
@@ -88,6 +90,64 @@ uint8_t receiveFlexSEABytes(uint8_t *d, uint8_t len, uint8_t autoParse)
 
 	return ppFlag;
 }
+
+// This function receives a comm string stored in the multipacket comm periph specified by p
+// TODO: implement for everything outside USB
+uint8_t receiveFxPacket(Port p) {
+
+	if(p != PORT_USB) return 1;
+
+	// tryParse checks for a frame in the input buffer in this comm periph
+	// and updates the comm periph accordingly
+	tryParse(&usbMultiPeriph);
+
+	// check if the parse resulted in a completed multi packet
+	if(usbMultiPeriph.in.isMultiComplete)
+	{
+		uint8_t parseResult = parseReadyMultiString(&usbMultiPeriph);
+		(void) parseResult;
+	}
+
+	return 0;
+}
+
+uint8_t transmitFxPacket(Port p) {
+
+	//only implemented for USB right now
+	if(p != PORT_USB) return 1;
+
+	//check if the periph has anything to send
+	if(usbMultiPeriph.out.frameMap > 0)
+	{
+		uint8_t frameId = 0;
+		//figure out the next frame to send
+		while((usbMultiPeriph.out.frameMap & (1 << frameId)) == 0)
+			frameId++;
+
+		//check that the frameid is valid
+		if(frameId >= MAX_FRAMES_PER_MULTI_PACKET)
+		{
+			// if its not valid we just discard the multi packet frames, setting the flags accordingly
+			usbMultiPeriph.out.frameMap = 0;
+			usbMultiPeriph.out.isMultiComplete = 1;
+			return 1;	// return an error
+		}
+
+		//send the frame
+		uint8_t retVal = CDC_Transmit_FS(usbMultiPeriph.out.packed[frameId], PACKET_WRAPPER_LEN);
+		if(retVal != USBD_OK)
+		{
+			;//(Handle errors here)
+		}
+		//mark frame as sent
+		usbMultiPeriph.out.frameMap &= (   ~(0 | (1 << frameId))    );
+		if(usbMultiPeriph.out.frameMap == 0)
+			usbMultiPeriph.out.isMultiComplete = 1;
+	}
+
+	return 0;
+}
+
 
 //****************************************************************************
 // Private Function(s):

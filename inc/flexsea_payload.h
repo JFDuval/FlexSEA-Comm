@@ -54,12 +54,14 @@ extern uint8_t payload_str[PAYLOAD_BUF_LEN];
 //****************************************************************************
 uint8_t payload_parse_str(PacketWrapper* foo);
 uint8_t sent_from_a_slave(uint8_t *buf);
-uint8_t packetType(uint8_t *buf);
 void prepare_empty_payload(uint8_t from, uint8_t to, uint8_t *buf, uint32_t len);
 void flexsea_payload_catchall(uint8_t *buf, uint8_t *info);
 uint8_t tryUnpacking(CommPeriph *cp, PacketWrapper *pw);
 uint8_t tryParseRx(CommPeriph *cp, PacketWrapper *pw);
 void getSignatureOfLastPayloadParsed(uint8_t *cmd, uint8_t *type);
+
+uint8_t packetType(uint8_t *buf);
+uint8_t get_rid(uint8_t *pldata);
 
 //****************************************************************************
 // Definition(s):
