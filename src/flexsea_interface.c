@@ -110,7 +110,7 @@ uint8_t receiveFxPacket(Port p) {
 	return 0;
 }
 
-#ifdef FLEXSEA_MANAGE
+#ifdef BOARD_TYPE_FLEXSEA_MANAGE
 // TODO: this function is completely manage specific, and it ought not be
 
 #include "usbd_cdc_if.h"
