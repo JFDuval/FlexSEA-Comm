@@ -119,9 +119,10 @@ uint8_t transmitFxPacket(Port p) {
 
 	//only implemented for USB right now
 	if(p != PORT_USB) return 1;
+	if(CDC_CheckBusy_FS()) return 1;
 
 	//check if the periph has anything to send
-	if(usbMultiPeriph.out.frameMap > 0)
+	if(usbMultiPeriph.out.frameMap > 0 && !usbMultiPeriph.out.isMultiComplete)
 	{
 		uint8_t frameId = 0;
 		//figure out the next frame to send
@@ -139,14 +140,26 @@ uint8_t transmitFxPacket(Port p) {
 
 		//send the frame
 		uint8_t retVal = CDC_Transmit_FS(usbMultiPeriph.out.packed[frameId], PACKET_WRAPPER_LEN);
-		if(retVal != USBD_OK)
+		if(retVal == USBD_OK)
 		{
-			;//(Handle errors here)
+			//mark frame as sent
+			usbMultiPeriph.out.frameMap &= (   ~(1 << frameId)   );
+
+			//highly wasteful better to just leave it but doing this for debugging purposes
+			//memset(usbMultiPeriph.out.packed[frameId], 0, PACKET_WRAPPER_LEN);
+			// NOTE: on a failed send it seems the USB driver will try to resend later?
+			// Experimentation shows it can store at least 300 bytes in a buffer for resend :O
+
+			if(usbMultiPeriph.out.frameMap == 0)
+				usbMultiPeriph.out.isMultiComplete = 1;
+
 		}
-		//mark frame as sent
-		usbMultiPeriph.out.frameMap &= (   ~(0 | (1 << frameId))    );
-		if(usbMultiPeriph.out.frameMap == 0)
-			usbMultiPeriph.out.isMultiComplete = 1;
+		else
+		{
+			// maybe we should be checking for USBD_BUSY or USBD_FAIL
+			return 1;//(Handle errors here)
+		}
+
 	}
 
 	return 0;
