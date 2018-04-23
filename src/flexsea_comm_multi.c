@@ -64,7 +64,7 @@ extern "C" {
 #include <stdint.h>
 #include "flexsea_comm_multi.h"
 #include "flexsea_payload.h"
-
+#include "flexsea.h"
 //****************************************************************************
 // Variable(s)
 //****************************************************************************
@@ -74,11 +74,6 @@ MultiCommPeriph usbMultiPeriph;
 //****************************************************************************
 // Private Function Prototypes(s)
 //****************************************************************************
-
-void setMsgInfo(uint8_t* outbuf, uint8_t xid, uint8_t rid, uint8_t cmdcode, uint8_t cmdtype);
-uint16_t unpack_multi_payload_cb(circularBuffer_t *cb, MultiWrapper* p);
-uint8_t packMultiPacket(MultiWrapper* p);
-void resetToPacketId(MultiWrapper* p, uint8_t id);
 
 //****************************************************************************
 // Public Function(s)

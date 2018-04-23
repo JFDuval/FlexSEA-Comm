@@ -87,7 +87,7 @@ uint8_t circ_buff_peak(circularBuffer_t* cb, uint16_t offset)
 
 int32_t circ_buff_search(circularBuffer_t* cb, uint8_t value, uint16_t start)
 {
-    if(start > cb->size) return -1;
+    if(start >= cb->size) return -1;
     int i = start;
     int index = cb->head + start;
 
@@ -218,7 +218,7 @@ int circ_buff_move_head(circularBuffer_t* cb, uint16_t numBytes)
 }
 
 int circ_buff_get_size(circularBuffer_t* cb)  { return cb->size; }
-
+int circ_buff_get_space(circularBuffer_t* cb)  { return CB_BUF_LEN - cb->size; }
 #ifdef __cplusplus
 }
 #endif

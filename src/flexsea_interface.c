@@ -40,7 +40,6 @@ extern "C" {
 #include "flexsea_comm_multi.h"
 #include "flexsea_payload.h"
 #include "flexsea_circular_buffer.h"
-#include "usbd_cdc_if.h"
 
 //****************************************************************************
 // Variable(s)
@@ -111,6 +110,11 @@ uint8_t receiveFxPacket(Port p) {
 	return 0;
 }
 
+#ifdef FLEXSEA_MANAGE
+// TODO: this function is completely manage specific, and it ought not be
+
+#include "usbd_cdc_if.h"
+
 uint8_t transmitFxPacket(Port p) {
 
 	//only implemented for USB right now
@@ -147,7 +151,7 @@ uint8_t transmitFxPacket(Port p) {
 
 	return 0;
 }
-
+#endif
 
 //****************************************************************************
 // Private Function(s):
