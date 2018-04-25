@@ -204,7 +204,7 @@ uint8_t tryParse(MultiCommPeriph *cp) {
 
 void setMsgInfo(uint8_t* outbuf, uint8_t xid, uint8_t rid, uint8_t cmdcode, uint8_t cmdtype) {
 	outbuf[P_XID] = xid;
-	outbuf[P_RID] = xid;
+	outbuf[P_RID] = rid;
 
 	outbuf[P_CMD] = 0;
 	outbuf[P_CMD] |= (cmdcode << 1);
