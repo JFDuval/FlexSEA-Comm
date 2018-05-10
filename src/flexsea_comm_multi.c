@@ -70,6 +70,7 @@ extern "C" {
 //****************************************************************************
 
 MultiCommPeriph usbMultiPeriph;
+MultiCommPeriph comm_multi_periph[NUMBER_OF_PORTS];
 
 //****************************************************************************
 // Private Function Prototypes(s)
@@ -80,7 +81,7 @@ MultiCommPeriph usbMultiPeriph;
 //****************************************************************************
 
 //Initialize CommPeriph to defaults:
-void initMultiPeriph(MultiCommPeriph *cp, Port port, PortType pt, circularBuffer_t* rx_cb)
+void initMultiPeriph(MultiCommPeriph *cp, Port port, PortType pt)
 {
 	cp->port = port;
 	cp->portType = pt;
@@ -89,7 +90,8 @@ void initMultiPeriph(MultiCommPeriph *cp, Port port, PortType pt, circularBuffer
 	cp->bytesReadyFlag = 0;
 	cp->unpackedPacketsAvailable = 0;
 
-	circ_buff_init(rx_cb);
+
+	circ_buff_init(cp->cir);
 	cp->circularBuff = rx_cb;
 }
 

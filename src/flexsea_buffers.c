@@ -400,4 +400,4 @@ static void update_rx_buf_6(uint8_t byte_array, uint8_t new_byte, \
 //****************************************************************************
 
 circularBuffer_t rx_buf_circ_1, rx_buf_circ_2, rx_buf_circ_3;
-circularBuffer_t rx_buf_circ_4, rx_buf_circ_5, rx_buf_circ_6, rx_buf_circ_7;
+circularBuffer_t rx_buf_circ_4, rx_buf_circ_5, rx_buf_circ_6;

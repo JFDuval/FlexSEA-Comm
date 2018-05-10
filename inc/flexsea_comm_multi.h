@@ -61,7 +61,7 @@ typedef struct
 	uint8_t timeStamp;
 
 	//Data:
-	circularBuffer_t *circularBuff;
+	circularBuffer_t circularBuff;
 
 	//Attach PacketWrappers:
 	MultiWrapper in;
