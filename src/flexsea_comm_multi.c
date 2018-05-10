@@ -91,8 +91,7 @@ void initMultiPeriph(MultiCommPeriph *cp, Port port, PortType pt)
 	cp->unpackedPacketsAvailable = 0;
 
 
-	circ_buff_init(cp->cir);
-	cp->circularBuff = rx_cb;
+	circ_buff_init(&cp->circularBuff);
 }
 
 //****************************************************************************
@@ -196,10 +195,10 @@ uint8_t tryParse(MultiCommPeriph *cp) {
 	uint8_t error = 0;
 
 	uint16_t numBytesConverted = \
-			unpack_multi_payload_cb(cp->circularBuff, &cp->in);
+			unpack_multi_payload_cb(&cp->circularBuff, &cp->in);
 
 	if(numBytesConverted > 0)
-		error = circ_buff_move_head(cp->circularBuff, numBytesConverted);
+		error = circ_buff_move_head(&cp->circularBuff, numBytesConverted);
 
 	return numBytesConverted > 0 && !error;
 }

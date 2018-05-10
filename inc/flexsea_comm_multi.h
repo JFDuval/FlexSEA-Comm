@@ -73,7 +73,7 @@ typedef struct
 // Public Function Prototype(s):
 //****************************************************************************
 
-void initMultiPeriph(MultiCommPeriph *cp, Port port, PortType pt, circularBuffer_t* rx_cb);
+void initMultiPeriph(MultiCommPeriph *cp, Port port, PortType pt);
 uint8_t tryParse(MultiCommPeriph *cp);
 uint8_t parseReadyMultiString(MultiCommPeriph* cp);
 
