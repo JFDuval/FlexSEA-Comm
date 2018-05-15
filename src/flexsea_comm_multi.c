@@ -62,6 +62,7 @@ extern "C" {
 #include <string.h>
 #include <stdlib.h>
 #include <stdint.h>
+#include "flexsea_sys_def.h"
 #include "flexsea_comm_multi.h"
 #include "flexsea_payload.h"
 #include "flexsea.h"
@@ -306,12 +307,14 @@ uint8_t parseReadyMultiString(MultiCommPeriph* cp)
 
 	id = get_rid(cp_str);
 
+	// NOTE: in a response, we need to reserve bytes for XID, RID, CMD, and TIMESTAMP
+	const uint8_t RESERVEDBYTES = 4;
+	uint8_t info[2] = {0,0};
+	info[0] = (uint8_t)cp->port;
+
 	//First, get RID code
 	if(id == ID_MATCH)
 	{
-		uint8_t info[2] = {0,0};
-		info[0] = (uint8_t)cp->port;
-
 		cp->in.destinationPort = PORT_NONE;	//We are home
 		pType = packetType(cp_str);
 
@@ -319,9 +322,6 @@ uint8_t parseReadyMultiString(MultiCommPeriph* cp)
 		//the appropriate handler (as defined in flexsea_system):
 		if((cmd_7bits <= MAX_CMD_CODE) && (pType <= RX_PTYPE_MAX_INDEX))
 		{
-			// NOTE: in a response, we need to reserve bytes for XID, RID, CMD, and TIMESTAMP
-			const uint8_t RESERVEDBYTES = 4;
-
 			// initialize the response length to 0
 			// Our index is the length of response.
 			cp->out.unpackedIdx = 0;
@@ -353,6 +353,22 @@ uint8_t parseReadyMultiString(MultiCommPeriph* cp)
 		else
 		{	//if the cmd bits or pType are invalid return error
 			return PARSE_DEFAULT;
+		}
+	}
+	else if(id == ID_NO_MATCH)
+	{
+		cp->in.unpacked[P_DATA1] = 0; // results in whoami msg
+		cp->out.unpackedIdx = 0;
+		(*flexsea_multipayload_ptr[CMD_SYSDATA][RX_PTYPE_READ])(cp->in.unpacked, info, cp->out.unpacked + RESERVEDBYTES, &cp->out.unpackedIdx);
+
+		if(cp->out.unpackedIdx)
+		{
+			setMsgInfo(cp->out.unpacked, cp_str[P_RID], cp_str[P_XID], cmd_7bits, RX_PTYPE_REPLY);
+			// adjust the index, as this now represents the length including reserved bytes
+			cp->out.unpackedIdx += RESERVEDBYTES;
+			// set multipacket id's to match
+			cp->out.currentMultiPacket = cp->in.currentMultiPacket;
+			packMultiPacket(&cp->out);
 		}
 	}
 	// else give up
