@@ -363,13 +363,14 @@ uint8_t parseReadyMultiString(MultiCommPeriph* cp)
 
 		if(cp->out.unpackedIdx)
 		{
-			setMsgInfo(cp->out.unpacked, cp_str[P_RID], cp_str[P_XID], cmd_7bits, RX_PTYPE_REPLY);
+			setMsgInfo(cp->out.unpacked, STM32_BOARD_ID, cp_str[P_XID], CMD_SYSDATA, RX_PTYPE_REPLY);
 			// adjust the index, as this now represents the length including reserved bytes
 			cp->out.unpackedIdx += RESERVEDBYTES;
 			// set multipacket id's to match
 			cp->out.currentMultiPacket = cp->in.currentMultiPacket;
 			packMultiPacket(&cp->out);
 		}
+		cp->in.frameMap = 0;
 	}
 	// else give up
 	return PARSE_DEFAULT;

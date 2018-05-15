@@ -293,18 +293,15 @@ static void route(PacketWrapper * p, PortType to)
 	#endif 	//BOARD_TYPE_FLEXSEA_MANAGE
 }
 
-// STM 32 UUID location from manual
-// https://ee-programming-notepad.blogspot.com/2017/06/reading-stm32f4-unique-device-id-from.html
-// http://www.st.com/content/ccc/resource/technical/document/reference_manual/3d/6d/5a/66/b4/99/40/d4/DM00031020.pdf/files/DM00031020.pdf/jcr:content/translations/en.DM00031020.pdf
-#define STM32_UUID_PTR (0x1FFF7A10)
-
 //Is it addressed to me? To a board "below" me? Or to my Master?
 uint8_t get_rid(uint8_t *pldata)
 {
 	uint8_t cp_rid = pldata[P_RID];
 	uint8_t i = 0;
 
-	if(cp_rid == getBoardID() || cp_rid == *STM32_UUID_PTR) //This board?
+	if(cp_rid == 0) return ID_NO_MATCH;
+
+	if(cp_rid == getBoardID() || cp_rid == STM32_BOARD_ID) //This board?
 	{
 		return ID_MATCH;
 	}

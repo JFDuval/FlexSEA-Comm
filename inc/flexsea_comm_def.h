@@ -77,6 +77,12 @@ extern "C" {
 #define ID_OTHER_MASTER					7		//Addressed to "a" master (special use case)
 #define ID_NO_MATCH						0
 
+	// STM 32 UUID location from manual
+	// https://ee-programming-notepad.blogspot.com/2017/06/reading-stm32f4-unique-device-id-from.html
+	// http://www.st.com/content/ccc/resource/technical/document/reference_manual/3d/6d/5a/66/b4/99/40/d4/DM00031020.pdf/files/DM00031020.pdf/jcr:content/translations/en.DM00031020.pdf
+	#define STM32_UUID_ADDR (0x1FFF7A10)
+	#define STM32_BOARD_ID (* ((uint8_t*)STM32_UUID_ADDR) )
+
 #define NUMBER_OF_PORTS					6		//Has to match enum!
 
 //Communication protocol payload fields:
