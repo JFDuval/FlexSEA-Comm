@@ -25,7 +25,7 @@ extern "C" {
 
 #define MAX_FRAMES_PER_MULTI_PACKET 4
 #define UNPACKED_BUFF_SIZE (MAX_FRAMES_PER_MULTI_PACKET*PACKET_WRAPPER_LEN)
-typedef struct
+typedef struct MultiWrapper_struct
 {
 	Port sourcePort;
 	Port destinationPort;
@@ -48,7 +48,7 @@ typedef struct
 
 } MultiWrapper;
 
-typedef struct
+typedef struct MultiCommPeriph_struct
 {
 	//Peripheral state and info:
 	Port port;
