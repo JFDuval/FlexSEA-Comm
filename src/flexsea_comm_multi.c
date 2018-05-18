@@ -81,6 +81,16 @@ MultiCommPeriph comm_multi_periph[NUMBER_OF_PORTS];
 // Public Function(s)
 //****************************************************************************
 
+void initMultiWrapper(MultiWrapper *w)
+{
+	int i;
+	for(i=0;i<MAX_FRAMES_PER_MULTI_PACKET;i++)
+		memset(w->packed[i], 0, PACKET_WRAPPER_LEN);
+
+	memset(w->unpacked, 0, UNPACKED_BUFF_SIZE);
+	w->unpackedIdx = 0;
+}
+
 //Initialize CommPeriph to defaults:
 void initMultiPeriph(MultiCommPeriph *cp, Port port, PortType pt)
 {
@@ -91,6 +101,8 @@ void initMultiPeriph(MultiCommPeriph *cp, Port port, PortType pt)
 	cp->bytesReadyFlag = 0;
 	cp->unpackedPacketsAvailable = 0;
 
+	initMultiWrapper(&(cp->in));
+	initMultiWrapper(&(cp->out));
 
 	circ_buff_init(&cp->circularBuff);
 }
@@ -153,7 +165,7 @@ uint16_t unpack_multi_payload_cb(circularBuffer_t *cb, MultiWrapper* p)
 
 		//if we just received the first frame of a new packet, we can throw out all the old info,
 		//the previous multi packet was either completed and parsed, or is incomplete and useless anyways
-		if(packetId != p->currentMultiPacket && frameId == 0)
+		if(frameId == 0 && ((packetId != p->currentMultiPacket) || (p->frameMap & 0x01)) )
 			resetToPacketId(p, packetId);
 
 		//this should always be true except in some strange case with out of order frames
@@ -190,7 +202,7 @@ uint16_t unpack_multi_payload_cb(circularBuffer_t *cb, MultiWrapper* p)
 }
 
 uint8_t tryParse(MultiCommPeriph *cp) {
-	if(!(cp->bytesReadyFlag > 0)) return 0;
+	if(!(cp->bytesReadyFlag > 0)) return 1;
 
 	cp->bytesReadyFlag--;	// = 0;
 	uint8_t error = 0;
@@ -201,7 +213,11 @@ uint8_t tryParse(MultiCommPeriph *cp) {
 	if(numBytesConverted > 0)
 		error = circ_buff_move_head(&cp->circularBuff, numBytesConverted);
 
-	return numBytesConverted > 0 && !error;
+	uint8_t retCode = 0;
+	retCode |= (error ? 2 : 0);
+	retCode |= (!numBytesConverted ? 4 : 0);
+
+	return retCode;
 }
 
 void setMsgInfo(uint8_t* outbuf, uint8_t xid, uint8_t rid, uint8_t cmdcode, uint8_t cmdtype) {
@@ -355,7 +371,9 @@ uint8_t parseReadyMultiString(MultiCommPeriph* cp)
 			return PARSE_DEFAULT;
 		}
 	}
-	else if(id == ID_NO_MATCH)
+	else if(cp->in.unpacked[P_RID] == 0 \
+			&& cmd_7bits == CMD_SYSDATA
+			)
 	{
 		cp->in.unpacked[P_DATA1] = 0; // results in whoami msg
 		cp->out.unpackedIdx = 0;

@@ -48,6 +48,8 @@ typedef struct MultiWrapper_struct
 
 } MultiWrapper;
 
+#define SIZE_OF_MULTIFRAME(frame) ( frame[1] + 5 )
+
 typedef struct MultiCommPeriph_struct
 {
 	//Peripheral state and info:
@@ -96,6 +98,7 @@ void resetToPacketId(MultiWrapper* p, uint8_t id);
 // Shared variable(s)
 //****************************************************************************
 extern MultiCommPeriph usbMultiPeriph;
+extern MultiCommPeriph comm_multi_periph[NUMBER_OF_PORTS];
 
 #ifdef __cplusplus
 }
