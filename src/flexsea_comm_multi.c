@@ -91,7 +91,6 @@ void initMultiPeriph(MultiCommPeriph *cp, Port port, PortType pt)
 	cp->bytesReadyFlag = 0;
 	cp->unpackedPacketsAvailable = 0;
 
-
 	circ_buff_init(&cp->circularBuff);
 }
 
@@ -105,14 +104,14 @@ uint16_t unpack_multi_payload_cb(circularBuffer_t *cb, MultiWrapper* p)
 	int bufSize = circ_buff_get_size(cb);
 
 	int foundString = 0, foundFrame = 0, bytes, possibleFooterPos;
-	int lastPossibleHeaderIndex = bufSize - 5;
+	int lastPossibleHeaderIndex = bufSize - MULTI_NUM_OVERHEAD_BYTES_FRAME;
 	int headerPos = -1, lastHeaderPos = -1;
 	uint8_t checksum = 0;
 
 	int headers = 0, footers = 0;
 	while(!foundString && lastHeaderPos < lastPossibleHeaderIndex)
 	{
-		headerPos = circ_buff_search(cb, HEADER, lastHeaderPos+1);
+		headerPos = circ_buff_search(cb, MULTI_SOF, lastHeaderPos+1);
 		//if we can't find a header, we quit searching for strings
 		if(headerPos == -1) break;
 
@@ -121,15 +120,15 @@ uint16_t unpack_multi_payload_cb(circularBuffer_t *cb, MultiWrapper* p)
 		if(headerPos <= lastPossibleHeaderIndex)
 		{
 			bytes = circ_buff_peak(cb, headerPos + 1);
-			possibleFooterPos = headerPos + 4 + bytes; //header=1, numbytes=1, multiinfo=1, data=bytes, crc=1, footer=1;
-			foundFrame = (possibleFooterPos < bufSize && circ_buff_peak(cb, possibleFooterPos) == FOOTER);
+			possibleFooterPos = MULTI_EOF_POS_FROM_SOF(headerPos, bytes);
+			foundFrame = (possibleFooterPos < bufSize && circ_buff_peak(cb, possibleFooterPos) == MULTI_EOF);
 		}
 
 		if(foundFrame)
 		{
 			footers++;
 			//checksum only adds actual data, not any of the frame stuff
-			checksum = circ_buff_checksum(cb, headerPos+3, possibleFooterPos-1);
+			checksum = circ_buff_checksum(cb, MULTI_DATA_POS_FROM_SOF(headerPos) , possibleFooterPos-1);
 
 			//if checksum is valid than we found a valid string
 			foundString = (checksum == circ_buff_peak(cb, possibleFooterPos-1));
@@ -142,14 +141,14 @@ uint16_t unpack_multi_payload_cb(circularBuffer_t *cb, MultiWrapper* p)
 	int numBytesInPackedString = 0;
 	if(foundString)
 	{
-		numBytesInPackedString = headerPos + bytes + 5;
+		numBytesInPackedString = headerPos + bytes + MULTI_NUM_OVERHEAD_BYTES_FRAME;
 		uint8_t multiInfo = circ_buff_peak(cb, headerPos + 2);
-		uint8_t packetId = (multiInfo >> 6) & 0x03;
-		uint8_t frameId  = (multiInfo >> 3) & 0x07;
-		uint8_t lastFrameInPacket  = multiInfo & 0x07;
+		uint8_t packetId = MULTI_PACKETID(multiInfo);
+		uint8_t frameId  = MULTI_THIS_FRAMEID(multiInfo);
+		uint8_t lastFrameInPacket  = MULTI_LAST_FRAMEID(multiInfo);
 
 		//why are we recording the packed data? just to have a linear buffer for the next part?
-		circ_buff_read_section(cb, p->packed[frameId], headerPos, bytes + 5);
+		circ_buff_read_section(cb, p->packed[frameId], headerPos, bytes + MULTI_NUM_OVERHEAD_BYTES_FRAME);
 
 		//if we just received the first frame of a new packet, we can throw out all the old info,
 		//the previous multi packet was either completed and parsed, or is incomplete and useless anyways
@@ -167,7 +166,7 @@ uint16_t unpack_multi_payload_cb(circularBuffer_t *cb, MultiWrapper* p)
 			for(k = 0; k < bytes; k++)
 			{
 				int index = k+3; //zeroth value is header, first value is numbytes, second value is multiInfo, thrid value is actual data
-				if(p->packed[frameId][index] == ESCAPE && (!lastValueWasEscape))
+				if(p->packed[frameId][index] == MULTI_ESC && (!lastValueWasEscape))
 				{
 					lastValueWasEscape = 1;
 				}
@@ -204,29 +203,25 @@ uint8_t tryParse(MultiCommPeriph *cp) {
 	return numBytesConverted > 0 && !error;
 }
 
-void setMsgInfo(uint8_t* outbuf, uint8_t xid, uint8_t rid, uint8_t cmdcode, uint8_t cmdtype) {
-	outbuf[P_XID] = xid;
-	outbuf[P_RID] = rid;
+void setMsgInfo(uint8_t* outbuf, uint8_t xid, uint8_t rid, uint8_t cmdcode, uint8_t cmdtype, uint32_t timestamp) {
+	outbuf[MP_XID] = xid;
+	outbuf[MP_RID] = rid;
 
-	outbuf[P_CMD] = 0;
-	outbuf[P_CMD] |= (cmdcode << 1);
+	memcpy(outbuf + MP_TSTP, &timestamp, sizeof(uint32_t));
+
+	outbuf[MP_CMD1] = (cmdcode << 1);
 	if(cmdtype == RX_PTYPE_READ)
-		outbuf[P_CMD] |= 0x01;
-
-	//TODO: include an actual timestamp
-	outbuf[P_TIMESTAMP] = 0;
+		outbuf[MP_CMD1] |= 0x01;
 }
 
 //Takes the payload, in p->unpacked, adds ESCAPES, checksum, header, ...
 //Adds escapes, checksums, etc, and breaks it up into packets
 //returns 1 on error, 0 on success
-#define BYTE_NEEDS_ESCAPE(x) (((x) == HEADER) || ((x) == FOOTER) || ((x) == ESCAPE))
+#define BYTE_NEEDS_ESCAPE(x) (((x) == MULTI_SOF) || ((x) == MULTI_EOF) || ((x) == MULTI_ESC))
 uint8_t packMultiPacket(MultiWrapper* p) {
 
-	const uint16_t OVERHEAD = 5;
 	//space per frame that we can fit the underlying unpacked string into
-	const uint16_t SPACE = PACKET_WRAPPER_LEN - OVERHEAD;
-	const uint16_t DATAOFFSET = 3;
+	const uint16_t SPACE = PACKET_WRAPPER_LEN - MULTI_NUM_OVERHEAD_BYTES_FRAME;
 
 	uint16_t i=0, j;
 	uint8_t frameId = 0;
@@ -235,29 +230,30 @@ uint8_t packMultiPacket(MultiWrapper* p) {
 	{
 			uint8_t *frame = p->packed[frameId];
 			j=0;
-			frame[0] = HEADER;							// set the frame's header
+			frame[0] = MULTI_SOF;							// set the start of frame byte
 			while(j < (SPACE-1) && i < p->unpackedIdx)		// fill in the data
 			{
 				if (BYTE_NEEDS_ESCAPE(p->unpacked[i]))
 				{
-					frame[DATAOFFSET+(j++)] = ESCAPE;
+					frame[MULTI_DATA_OFFSET+(j++)] = MULTI_ESC;
 				}
-				frame[DATAOFFSET+(j++)] = p->unpacked[i++];
+				frame[MULTI_DATA_OFFSET+(j++)] = p->unpacked[i++];
 			}
 
 			//if the next byte doesn't need an escape, then we can add it
 			if(j < SPACE && i < p->unpackedIdx && !BYTE_NEEDS_ESCAPE(p->unpacked[i]))
-				frame[DATAOFFSET+(j++)] = p->unpacked[i++];
+				frame[MULTI_DATA_OFFSET+(j++)] = p->unpacked[i++];
 
 			frame[1] = j;								// set the frame's num bytes
 
 			//checksum only adds actual data, not any of the frame stuff
-			uint8_t crcsum = 0;
+			uint8_t checksum = 0;
 			for(j=0; j < frame[1]; j++)
-				crcsum += frame[DATAOFFSET+j];
-			uint8_t crcpos = DATAOFFSET + frame[1];
-			frame[crcpos] = crcsum;						// set the crc
-			frame[crcpos+1] = FOOTER;					// set the footer
+				checksum += frame[MULTI_DATA_OFFSET+j];
+
+			uint8_t checksumPos = MULTI_CHECKSUM_POS_FROM_SOF(0, frame[1]);
+			frame[checksumPos] = checksum;						// set the checksum
+			frame[checksumPos+1] = MULTI_EOF;					// set the end of frame byte
 
 			//if there's still data to pack then we must move onto the next frame
 			if(i < p->unpackedIdx)
@@ -271,12 +267,12 @@ uint8_t packMultiPacket(MultiWrapper* p) {
 	// if it did all fit we just need to fill the multiInfo byte now that we know how many frames we have
 	// frameId now holds the id of the last frame in the packet
 	uint8_t lastFrameIdInPacket = frameId;
-	uint8_t multiInfoPos = 2;
+	uint8_t multiInfoPos = MULTI_INFO_POS_FROM_SOF(0);
 
 	p->frameMap = 0;									// set the multiInfo
 	for(frameId=0; frameId <= lastFrameIdInPacket; frameId++)
 	{
-		p->packed[frameId][multiInfoPos] = ((p->currentMultiPacket << 6) | (frameId << 3) | lastFrameIdInPacket);
+		p->packed[frameId][multiInfoPos] = MULTI_GENINFO(p->currentMultiPacket, frameId, lastFrameIdInPacket);
 		p->frameMap |= (1 << frameId);
 	}
 
@@ -302,17 +298,14 @@ uint8_t parseReadyMultiString(MultiCommPeriph* cp)
 	uint8_t pType = RX_PTYPE_INVALID;
 
 	//Command
-	cmd = cp_str[P_CMD];		//CMD w/ R/W bit
+	cmd = cp_str[MP_CMD1];		//CMD w/ R/W bit
 	cmd_7bits = CMD_7BITS(cmd);	//CMD code, no R/W information
 
-	id = get_rid(cp_str);
-
-	// NOTE: in a response, we need to reserve bytes for XID, RID, CMD, and TIMESTAMP
-	const uint8_t RESERVEDBYTES = 4;
 	uint8_t info[2] = {0,0};
 	info[0] = (uint8_t)cp->port;
 
 	//First, get RID code
+	id = get_rid(cp_str);
 	if(id == ID_MATCH)
 	{
 		cp->in.destinationPort = PORT_NONE;	//We are home
@@ -326,17 +319,17 @@ uint8_t parseReadyMultiString(MultiCommPeriph* cp)
 			// Our index is the length of response.
 			cp->out.unpackedIdx = 0;
 
-			//Call handler:
-			(*flexsea_multipayload_ptr[cmd_7bits][pType]) (cp->in.unpacked, info, cp->out.unpacked + RESERVEDBYTES, &cp->out.unpackedIdx);
+			//Call handler, 							NOTE: in a response, we need to reserve bytes for XID, RID, CMD, and TIMESTAMP
+			(*flexsea_multipayload_ptr[cmd_7bits][pType]) (cp->in.unpacked + MP_DATA1, info, cp->out.unpacked + MULTI_PACKET_OVERHEAD, &cp->out.unpackedIdx);
 
 			uint8_t error = 0;
 
 			//If there is a response we need to route it or w/e
 			if(cp->out.unpackedIdx) {
-				setMsgInfo(cp->out.unpacked, cp_str[P_RID], cp_str[P_XID], cmd_7bits, RX_PTYPE_REPLY);
+				setMsgInfo(cp->out.unpacked, cp_str[MP_RID], cp_str[MP_XID], cmd_7bits, RX_PTYPE_REPLY, 0);
 
 				// adjust the index, as this now represents the length including reserved bytes
-				cp->out.unpackedIdx += RESERVEDBYTES;
+				cp->out.unpackedIdx += MULTI_PACKET_OVERHEAD;
 
 				// set multipacket id's to match
 				cp->out.currentMultiPacket = cp->in.currentMultiPacket;
@@ -357,15 +350,15 @@ uint8_t parseReadyMultiString(MultiCommPeriph* cp)
 	}
 	else if(id == ID_NO_MATCH)
 	{
-		cp->in.unpacked[P_DATA1] = 0; // results in whoami msg
+		cp->in.unpacked[MP_DATA1] = 0; // results in whoami msg
 		cp->out.unpackedIdx = 0;
-		(*flexsea_multipayload_ptr[CMD_SYSDATA][RX_PTYPE_READ])(cp->in.unpacked, info, cp->out.unpacked + RESERVEDBYTES, &cp->out.unpackedIdx);
+		(*flexsea_multipayload_ptr[CMD_SYSDATA][RX_PTYPE_READ])(cp->in.unpacked + MP_DATA1, info, cp->out.unpacked + MULTI_PACKET_OVERHEAD, &cp->out.unpackedIdx);
 
 		if(cp->out.unpackedIdx)
 		{
-			setMsgInfo(cp->out.unpacked, STM32_BOARD_ID, cp_str[P_XID], CMD_SYSDATA, RX_PTYPE_REPLY);
+			setMsgInfo(cp->out.unpacked, STM32_BOARD_ID, cp_str[MP_XID], CMD_SYSDATA, RX_PTYPE_REPLY, 0);
 			// adjust the index, as this now represents the length including reserved bytes
-			cp->out.unpackedIdx += RESERVEDBYTES;
+			cp->out.unpackedIdx += MULTI_PACKET_OVERHEAD;
 			// set multipacket id's to match
 			cp->out.currentMultiPacket = cp->in.currentMultiPacket;
 			packMultiPacket(&cp->out);

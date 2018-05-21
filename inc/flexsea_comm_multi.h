@@ -17,13 +17,13 @@ extern "C" {
 //****************************************************************************
 
 #include "flexsea.h"
+#include "flexsea_multi_frame_packet_def.h"
 //****************************************************************************
 // Structure(s)
 //****************************************************************************
 
 // ---------- Multi Packet versions of Comm Periph structs
 
-#define MAX_FRAMES_PER_MULTI_PACKET 4
 #define UNPACKED_BUFF_SIZE (MAX_FRAMES_PER_MULTI_PACKET*PACKET_WRAPPER_LEN)
 typedef struct MultiWrapper_struct
 {
@@ -77,7 +77,7 @@ void initMultiPeriph(MultiCommPeriph *cp, Port port, PortType pt);
 uint8_t tryParse(MultiCommPeriph *cp);
 uint8_t parseReadyMultiString(MultiCommPeriph* cp);
 
-void setMsgInfo(uint8_t* outbuf, uint8_t xid, uint8_t rid, uint8_t cmdcode, uint8_t cmdtype);
+void setMsgInfo(uint8_t* outbuf, uint8_t xid, uint8_t rid, uint8_t cmdcode, uint8_t cmdtype, uint32_t timestamp);
 uint16_t unpack_multi_payload_cb(circularBuffer_t *cb, MultiWrapper* p);
 uint8_t packMultiPacket(MultiWrapper* p);
 void resetToPacketId(MultiWrapper* p, uint8_t id);
