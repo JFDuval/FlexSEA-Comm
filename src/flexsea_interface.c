@@ -41,6 +41,11 @@ extern "C" {
 #include "flexsea_payload.h"
 #include "flexsea_circular_buffer.h"
 
+#ifndef BOARD_TYPE_FLEXSEA_PLAN
+#include "uarts.h"
+#include "usbd_cdc_if.h"
+#endif // BOARD_TYPE_FLEXSEA_PLAN
+
 //****************************************************************************
 // Variable(s)
 //****************************************************************************
@@ -94,64 +99,76 @@ uint8_t receiveFlexSEABytes(uint8_t *d, uint8_t len, uint8_t autoParse)
 // TODO: implement for everything outside USB
 uint8_t receiveFxPacket(Port p) {
 
-	if(p != PORT_USB) return 1;
+	MultiCommPeriph *cp = comm_multi_periph + p;
 
-	// tryParse checks for a frame in the input buffer in this comm periph
-	// and updates the comm periph accordingly
-	tryParse(&usbMultiPeriph);
+	if(!(cp->bytesReadyFlag > 0))
+		return 1;
+
+	cp->bytesReadyFlag--;	// = 0;
+	uint8_t error = 0, parseResult = 0;
+
+	uint16_t numBytesConverted = unpack_multi_payload_cb(&cp->circularBuff, &cp->in);
+
+	if(numBytesConverted > 0)
+		error = circ_buff_move_head(&cp->circularBuff, numBytesConverted);
 
 	// check if the parse resulted in a completed multi packet
-	if(usbMultiPeriph.in.isMultiComplete)
-	{
-		uint8_t parseResult = parseReadyMultiString(&usbMultiPeriph);
-		(void) parseResult;
-	}
+	if(cp->in.isMultiComplete)
+		parseResult = parseReadyMultiString(cp);
 
-	return 0;
+	return parseResult != PARSE_SUCCESSFUL;
 }
 
 #ifdef BOARD_TYPE_FLEXSEA_MANAGE
 // TODO: this function is completely manage specific, and it ought not be
 
-#include "usbd_cdc_if.h"
 
 uint8_t transmitFxPacket(Port p) {
 
-	//only implemented for USB right now
-	if(p != PORT_USB) return 1;
-	if(CDC_CheckBusy_FS()) return 1;
+	MultiCommPeriph *cp = comm_multi_periph + p;
 
 	//check if the periph has anything to send
-	if(usbMultiPeriph.out.frameMap > 0 && !usbMultiPeriph.out.isMultiComplete)
+	if(cp->out.frameMap > 0 && !cp->out.isMultiComplete)
 	{
 		uint8_t frameId = 0;
 		//figure out the next frame to send
-		while((usbMultiPeriph.out.frameMap & (1 << frameId)) == 0)
+		while((cp->out.frameMap & (1 << frameId)) == 0)
 			frameId++;
 
 		//check that the frameid is valid
 		if(frameId >= MAX_FRAMES_PER_MULTI_PACKET)
 		{
 			// if its not valid we just discard the multi packet frames, setting the flags accordingly
-			usbMultiPeriph.out.frameMap = 0;
-			usbMultiPeriph.out.isMultiComplete = 1;
+			cp->out.frameMap = 0;
+			cp->out.isMultiComplete = 1;
 			return 1;	// return an error
 		}
 
-		//send the frame
-		uint8_t retVal = CDC_Transmit_FS(usbMultiPeriph.out.packed[frameId], PACKET_WRAPPER_LEN);
-		if(retVal == USBD_OK)
+		uint8_t success = 0;
+		if(p == PORT_WIRELESS)
+		{
+			puts_expUart(cp->out.packed[frameId], SIZE_OF_MULTIFRAME(cp->out.packed[frameId]));
+			success = 1;
+		}
+		else if(p == PORT_USB)
+		{
+			success = !CDC_CheckBusy_FS() && USBD_OK == CDC_Transmit_FS(cp->out.packed[frameId], SIZE_OF_MULTIFRAME(cp->out.packed[frameId]));
+		}
+		else
+			success = 1; // unimplemented port we just pretend its all good? TODO: something smarter?
+
+		if(success)
 		{
 			//mark frame as sent
-			usbMultiPeriph.out.frameMap &= (   ~(1 << frameId)   );
+			cp->out.frameMap &= (   ~(1 << frameId)   );
 
 			//highly wasteful better to just leave it but doing this for debugging purposes
-			//memset(usbMultiPeriph.out.packed[frameId], 0, PACKET_WRAPPER_LEN);
+			//memset(cp->out.packed[frameId], 0, PACKET_WRAPPER_LEN);
 			// NOTE: on a failed send it seems the USB driver will try to resend later?
 			// Experimentation shows it can store at least 300 bytes in a buffer for resend :O
 
-			if(usbMultiPeriph.out.frameMap == 0)
-				usbMultiPeriph.out.isMultiComplete = 1;
+			if(cp->out.frameMap == 0)
+				cp->out.isMultiComplete = 1;
 
 		}
 		else

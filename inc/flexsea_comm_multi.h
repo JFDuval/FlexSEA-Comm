@@ -96,6 +96,7 @@ void resetToPacketId(MultiWrapper* p, uint8_t id);
 // Shared variable(s)
 //****************************************************************************
 extern MultiCommPeriph usbMultiPeriph;
+extern MultiCommPeriph comm_multi_periph[NUMBER_OF_PORTS];
 
 #ifdef __cplusplus
 }

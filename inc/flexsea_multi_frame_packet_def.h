@@ -40,6 +40,7 @@
 #define MULTI_CHECKSUM_POS_FROM_SOF(sof, nb) ( (sof) + (nb) + MULTI_NUM_OVERHEAD_BYTES_FRAME - 2 )
 #define MULTI_INFO_POS_FROM_SOF(sof) ( (sof)+2 )
 
+#define SIZE_OF_MULTIFRAME(frame) ( frame[1] + 5 )
 
 /*
  *	The PacketData has the following format
