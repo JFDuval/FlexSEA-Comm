@@ -302,7 +302,7 @@ uint8_t packMultiPacket(MultiWrapper* p) {
 	return 0;
 }
 
-uint8_t receiveAndPackResponse(uint8_t cmd_7bits, uint8_t pType, uint8_t info[2], MultiCommPeriph* cp)
+uint8_t receiveAndPackResponse(uint8_t cmd_7bits, uint8_t pType, MultiPacketInfo* info, MultiCommPeriph* cp)
 {
 	// initialize the response length to 0
 	// Our index is the length of response.
@@ -314,8 +314,8 @@ uint8_t receiveAndPackResponse(uint8_t cmd_7bits, uint8_t pType, uint8_t info[2]
 	uint8_t error = 0;
 	//If there is a response we need to route it or w/e
 	if (cp->out.unpackedIdx) {
-		//TODO: fill with an actual timestamp
-		setMsgInfo(cp->out.unpacked, cp->in.unpacked[MP_RID], cp->in.unpacked[MP_XID], cmd_7bits, RX_PTYPE_REPLY, *fx_dev_timestamp);
+		//TODO: fill with an actual cross device timestamp
+		setMsgInfo(cp->out.unpacked, info->rid, info->xid, cmd_7bits, RX_PTYPE_REPLY, *fx_dev_timestamp);
 		// adjust the index, as this now represents the length including reserved bytes
 		cp->out.unpackedIdx += MULTI_PACKET_OVERHEAD;
 		// set multipacket id's to match
@@ -346,8 +346,10 @@ uint8_t parseReadyMultiString(MultiCommPeriph* cp)
 	cmd = cp_str[MP_CMD1];		//CMD w/ R/W bit
 	cmd_7bits = CMD_7BITS(cmd);	//CMD code, no R/W information
 
-	uint8_t info[2] = {0,0};
-	info[0] = (uint8_t)cp->port;
+	MultiPacketInfo info;
+	info.portIn = cp->port;
+	info.xid = cp_str[MP_XID];
+	info.rid = cp_str[MP_RID];
 
 	//First, get RID code
 	id = get_rid(cp_str);
@@ -362,15 +364,15 @@ uint8_t parseReadyMultiString(MultiCommPeriph* cp)
 		//the appropriate handler (as defined in flexsea_system):
 		if((cmd_7bits <= MAX_CMD_CODE) && (pType <= RX_PTYPE_MAX_INDEX))
 		{
-			uint8_t error = receiveAndPackResponse(cmd_7bits, pType, info, cp);
+			uint8_t error = receiveAndPackResponse(cmd_7bits, pType, &info, cp);
 			if(error)
 				return PARSE_DEFAULT;
 		}
 	}
 	else if(cp->in.unpacked[MP_RID] == 0 && cmd_7bits == CMD_SYSDATA)
 	{
-		cp->in.unpacked[MP_DATA1] = 0; // results in whoami msg
-		uint8_t error = receiveAndPackResponse(cmd_7bits, RX_PTYPE_READ, info, cp);
+		cp->in.unpacked[MP_DATA1] = SYSDATA_WHO_AM_I_FLAG; // results in whoami msg
+		uint8_t error = receiveAndPackResponse(cmd_7bits, RX_PTYPE_READ, &info, cp);
 		if(error)
 			return PARSE_DEFAULT;
 	}

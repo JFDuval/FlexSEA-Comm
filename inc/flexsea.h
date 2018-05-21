@@ -75,12 +75,21 @@ typedef enum {
 // Shared variable(s)
 //****************************************************************************
 
+typedef struct _MultiPacketInfo_s {
+
+	uint8_t portIn;
+	uint8_t portOut;
+	uint8_t xid;
+	uint8_t rid;
+
+} MultiPacketInfo;
+
 //Function pointer array:
 extern void (*flexsea_payload_ptr[MAX_CMD_CODE][RX_PTYPE_MAX_INDEX+1]) \
 				(uint8_t *buf, uint8_t *info);
 
 extern void (*flexsea_multipayload_ptr[MAX_CMD_CODE][RX_PTYPE_MAX_INDEX+1]) \
-				(uint8_t *msgBuf, uint8_t *info, uint8_t *responseBuf, uint16_t* responseLen);
+				(uint8_t *msgBuf, MultiPacketInfo *info, uint8_t *responseBuf, uint16_t* responseLen);
 
 //****************************************************************************
 // Macro(s):

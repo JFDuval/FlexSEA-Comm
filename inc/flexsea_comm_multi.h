@@ -77,6 +77,7 @@ void initMultiPeriph(MultiCommPeriph *cp, Port port, PortType pt);
 uint8_t tryParse(MultiCommPeriph *cp);
 uint8_t parseReadyMultiString(MultiCommPeriph* cp);
 
+uint8_t receiveAndPackResponse(uint8_t cmd_7bits, uint8_t pType, MultiPacketInfo *info, MultiCommPeriph* cp);
 void setMsgInfo(uint8_t* outbuf, uint8_t xid, uint8_t rid, uint8_t cmdcode, uint8_t cmdtype, uint32_t timestamp);
 uint16_t unpack_multi_payload_cb(circularBuffer_t *cb, MultiWrapper* p);
 uint8_t packMultiPacket(MultiWrapper* p);
