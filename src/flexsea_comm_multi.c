@@ -66,6 +66,8 @@ extern "C" {
 #include "flexsea_comm_multi.h"
 #include "flexsea_payload.h"
 #include "flexsea.h"
+#include "flexsea_device_spec.h"
+
 //****************************************************************************
 // Variable(s)
 //****************************************************************************
@@ -180,7 +182,7 @@ uint16_t unpack_multi_payload_cb(circularBuffer_t *cb, MultiWrapper* p)
 			int k, lastValueWasEscape = 0;
 			for(k = 0; k < bytes; k++)
 			{
-				int index = k+3; //zeroth value is header, first value is numbytes, second value is multiInfo, thrid value is actual data
+				int index = k+3; //zeroth value is header, first value is numbytes, second value is multiInfo, third value is actual data
 				if(p->packed[frameId][index] == MULTI_ESC && (!lastValueWasEscape))
 				{
 					lastValueWasEscape = 1;
@@ -300,6 +302,30 @@ uint8_t packMultiPacket(MultiWrapper* p) {
 	return 0;
 }
 
+uint8_t receiveAndPackResponse(uint8_t cmd_7bits, uint8_t pType, uint8_t info[2], MultiCommPeriph* cp)
+{
+	// initialize the response length to 0
+	// Our index is the length of response.
+	cp->out.unpackedIdx = 0;
+
+	//Call handler, 							NOTE: in a response, we need to reserve bytes for XID, RID, CMD, and TIMESTAMP
+	(*flexsea_multipayload_ptr[cmd_7bits][pType])(cp->in.unpacked + MP_DATA1, info, cp->out.unpacked + MP_DATA1, &cp->out.unpackedIdx);
+
+	uint8_t error = 0;
+	//If there is a response we need to route it or w/e
+	if (cp->out.unpackedIdx) {
+		//TODO: fill with an actual timestamp
+		setMsgInfo(cp->out.unpacked, cp->in.unpacked[MP_RID], cp->in.unpacked[MP_XID], cmd_7bits, RX_PTYPE_REPLY, *fx_dev_timestamp);
+		// adjust the index, as this now represents the length including reserved bytes
+		cp->out.unpackedIdx += MULTI_PACKET_OVERHEAD;
+		// set multipacket id's to match
+		cp->out.currentMultiPacket = cp->in.currentMultiPacket;
+		error = packMultiPacket(&cp->out);
+	}
+	cp->in.frameMap = 0;
+	return error;
+}
+
 //TODO: make this be able to send up stream / down stream?
 // Just note that this only works if this device is communicating with plan.
 uint8_t parseReadyMultiString(MultiCommPeriph* cp)
@@ -328,66 +354,28 @@ uint8_t parseReadyMultiString(MultiCommPeriph* cp)
 	if(id == ID_MATCH)
 	{
 		cp->in.destinationPort = PORT_NONE;	//We are home
-		pType = packetType(cp_str);
+
+		//TODO: figure out how to determine if message is actually from slave
+		pType = (cp_str[MP_CMD1] & 0x01) ? RX_PTYPE_READ : RX_PTYPE_WRITE;
 
 		//It's addressed to me. Function pointer array will call
 		//the appropriate handler (as defined in flexsea_system):
 		if((cmd_7bits <= MAX_CMD_CODE) && (pType <= RX_PTYPE_MAX_INDEX))
 		{
-			// initialize the response length to 0
-			// Our index is the length of response.
-			cp->out.unpackedIdx = 0;
-
-			//Call handler, 							NOTE: in a response, we need to reserve bytes for XID, RID, CMD, and TIMESTAMP
-			(*flexsea_multipayload_ptr[cmd_7bits][pType]) (cp->in.unpacked + MP_DATA1, info, cp->out.unpacked + MULTI_PACKET_OVERHEAD, &cp->out.unpackedIdx);
-
-			uint8_t error = 0;
-
-			//If there is a response we need to route it or w/e
-			if(cp->out.unpackedIdx) {
-				setMsgInfo(cp->out.unpacked, cp_str[MP_RID], cp_str[MP_XID], cmd_7bits, RX_PTYPE_REPLY, 0);
-
-				// adjust the index, as this now represents the length including reserved bytes
-				cp->out.unpackedIdx += MULTI_PACKET_OVERHEAD;
-
-				// set multipacket id's to match
-				cp->out.currentMultiPacket = cp->in.currentMultiPacket;
-
-				error = packMultiPacket(&cp->out);
-			}
-
-			cp->in.frameMap = 0;
-			if(!error)
-				return PARSE_SUCCESSFUL;
-			else
+			uint8_t error = receiveAndPackResponse(cmd_7bits, pType, info, cp);
+			if(error)
 				return PARSE_DEFAULT;
 		}
-		else
-		{	//if the cmd bits or pType are invalid return error
-			return PARSE_DEFAULT;
-		}
 	}
-	else if(cp->in.unpacked[P_RID] == 0 \
-			&& cmd_7bits == CMD_SYSDATA
-			)
+	else if(cp->in.unpacked[MP_RID] == 0 && cmd_7bits == CMD_SYSDATA)
 	{
 		cp->in.unpacked[MP_DATA1] = 0; // results in whoami msg
-		cp->out.unpackedIdx = 0;
-		(*flexsea_multipayload_ptr[CMD_SYSDATA][RX_PTYPE_READ])(cp->in.unpacked + MP_DATA1, info, cp->out.unpacked + MULTI_PACKET_OVERHEAD, &cp->out.unpackedIdx);
-
-		if(cp->out.unpackedIdx)
-		{
-			setMsgInfo(cp->out.unpacked, STM32_BOARD_ID, cp_str[MP_XID], CMD_SYSDATA, RX_PTYPE_REPLY, 0);
-			// adjust the index, as this now represents the length including reserved bytes
-			cp->out.unpackedIdx += MULTI_PACKET_OVERHEAD;
-			// set multipacket id's to match
-			cp->out.currentMultiPacket = cp->in.currentMultiPacket;
-			packMultiPacket(&cp->out);
-		}
-		cp->in.frameMap = 0;
+		uint8_t error = receiveAndPackResponse(cmd_7bits, RX_PTYPE_READ, info, cp);
+		if(error)
+			return PARSE_DEFAULT;
 	}
 	// else give up
-	return PARSE_DEFAULT;
+	return PARSE_SUCCESSFUL;
 }
 
 void resetToPacketId(MultiWrapper* p, uint8_t id)
