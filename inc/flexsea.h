@@ -84,6 +84,8 @@ typedef struct _MultiPacketInfo_s {
 
 } MultiPacketInfo;
 
+extern void fillMultiInfoFromBuf(MultiPacketInfo *mInfo, uint8_t* buf, uint8_t* info);
+
 //Function pointer array:
 extern void (*flexsea_payload_ptr[MAX_CMD_CODE][RX_PTYPE_MAX_INDEX+1]) \
 				(uint8_t *buf, uint8_t *info);

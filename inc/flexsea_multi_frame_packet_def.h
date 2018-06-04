@@ -62,5 +62,6 @@
 #define MP_DATA1	8
 
 #define MULTI_PACKET_OVERHEAD MP_DATA1
+#define MULTI_GET_CMD7(packet) ( (packet)[MP_CMD1] >> 1 )
 
 #endif /* FLEXSEA_COMM_INC_FLEXSEA_MULTI_FRAME_PACKET_DEF_H_ */

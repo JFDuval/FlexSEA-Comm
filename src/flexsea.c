@@ -81,6 +81,14 @@ unsigned int flexsea_error(unsigned int err_code)
 	return err_code;
 }
 
+void fillMultiInfoFromBuf(MultiPacketInfo *mInfo, uint8_t* buf, uint8_t* info)
+{
+	mInfo->portIn = info[0];
+//	mInfo->portOut = info[1];
+	mInfo->xid = buf[P_XID];
+	mInfo->rid = buf[P_RID];
+}
+
 //Splits 1 uint16 in 2 bytes, stores them in buf[index] and increments index
 inline void SPLIT_16(uint16_t var, uint8_t *buf, uint16_t *index)
 {
