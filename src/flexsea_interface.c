@@ -99,6 +99,8 @@ uint8_t receiveFlexSEABytes(uint8_t *d, uint8_t len, uint8_t autoParse)
 // TODO: implement for everything outside USB
 uint8_t receiveFxPacket(Port p) {
 
+	static int8_t lastPacketIds[NUMBER_OF_PORTS] = { -1, -1, -1, -1, -1, -1 };
+
 	MultiCommPeriph *cp = comm_multi_periph + p;
 
 	if(!(cp->bytesReadyFlag > 0))
@@ -112,9 +114,12 @@ uint8_t receiveFxPacket(Port p) {
 	if(numBytesConverted > 0)
 		error = circ_buff_move_head(&cp->circularBuff, numBytesConverted);
 
-	// check if the parse resulted in a completed multi packet
-	if(cp->in.isMultiComplete)
+	// check if the parse resulted in a completed multi packet, and that said multipacket is not a re-receive
+	if(cp->in.isMultiComplete && cp->in.currentMultiPacket != lastPacketIds[p])
+	{
 		parseResult = parseReadyMultiString(cp);
+		lastPacketIds[p] = cp->in.currentMultiPacket;
+	}
 
 	return parseResult != PARSE_SUCCESSFUL;
 }
