@@ -42,7 +42,13 @@ extern "C" {
 #include "flexsea_circular_buffer.h"
 
 #ifndef BOARD_TYPE_FLEXSEA_PLAN
+
+#ifndef DEPHY
 #include "uarts.h"
+#else
+#include "usart.h"
+#endif // DEPHY
+
 #include "usbd_cdc_if.h"
 #endif // BOARD_TYPE_FLEXSEA_PLAN
 
@@ -166,11 +172,6 @@ uint8_t transmitFxPacket(Port p) {
 		{
 			//mark frame as sent
 			cp->out.frameMap &= (   ~(1 << frameId)   );
-
-			//highly wasteful better to just leave it but doing this for debugging purposes
-			//memset(cp->out.packed[frameId], 0, PACKET_WRAPPER_LEN);
-			// NOTE: on a failed send it seems the USB driver will try to resend later?
-			// Experimentation shows it can store at least 300 bytes in a buffer for resend :O
 
 			if(cp->out.frameMap == 0)
 				cp->out.isMultiComplete = 1;
