@@ -301,7 +301,7 @@ uint8_t get_rid(uint8_t *pldata)
 
 	if(cp_rid == 0) return ID_NO_MATCH;
 
-	if(cp_rid == getBoardID() || cp_rid == STM32_BOARD_ID) //This board?
+	if(cp_rid == getBoardID() || cp_rid == getDeviceId()) //This board?
 	{
 		return ID_MATCH;
 	}
