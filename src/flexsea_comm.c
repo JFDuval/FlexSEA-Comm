@@ -64,6 +64,7 @@ extern "C" {
 #include <stdint.h>
 #include <flexsea_comm.h>
 
+#include "flexsea_user_structs.h"
 //****************************************************************************
 // Variable(s)
 //****************************************************************************
@@ -120,7 +121,7 @@ uint8_t comm_gen_str(uint8_t payload[], uint8_t *cstr, uint8_t bytes)
 	//Fill comm_str with payload and add ESCAPE characters
 	escapes = 0;
 	idx = 2;
-	for(i = 0; i < bytes; i++)
+	for(i = 0; i < bytes && idx < COMM_STR_BUF_LEN; i++)
 	{
 		if ((payload[i] == HEADER) || (payload[i] == FOOTER) || (payload[i] == ESCAPE))
 		{
@@ -134,6 +135,14 @@ uint8_t comm_gen_str(uint8_t payload[], uint8_t *cstr, uint8_t bytes)
 			cstr[idx] = payload[i];
 		}
 		idx++;
+	}
+
+	if(idx == COMM_STR_BUF_LEN)
+	{
+		//Too long, abort:
+		memset(cstr, 0, COMM_STR_BUF_LEN);	//Clear string
+		rigid1.mn.genVar[9] = 0x00AA;
+		return 0;
 	}
 
 	total_bytes = bytes + escapes;

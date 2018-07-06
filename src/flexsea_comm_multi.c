@@ -313,11 +313,14 @@ uint8_t receiveAndPackResponse(uint8_t cmd_7bits, uint8_t pType, MultiPacketInfo
 
 	uint8_t error = 0;
 	//If there is a response we need to route it or w/e
-	if (cp->out.unpackedIdx) {
+	if(cp->out.unpackedIdx + MULTI_PACKET_OVERHEAD >= UNPACKED_BUFF_SIZE) {
+		rigid1.mn.genVar[8] = 0x00bb;
+	}	else if (cp->out.unpackedIdx) {
 		//TODO: fill with an actual cross device timestamp
 		setMsgInfo(cp->out.unpacked, info->rid, info->xid, cmd_7bits, RX_PTYPE_REPLY, *fx_dev_timestamp);
 		// adjust the index, as this now represents the length including reserved bytes
 		cp->out.unpackedIdx += MULTI_PACKET_OVERHEAD;
+
 		// set multipacket id's to match
 		cp->out.currentMultiPacket = cp->in.currentMultiPacket;
 		error = packMultiPacket(&cp->out);
