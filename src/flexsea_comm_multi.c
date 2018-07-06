@@ -361,8 +361,11 @@ uint8_t parseReadyMultiString(MultiCommPeriph* cp)
 		cp->in.destinationPort = PORT_NONE;	//We are home
 
 		//TODO: figure out how to determine if message is actually from slave
+#ifdef BOARD_TYPE_FLEXSEA_PLAN
+		pType = RX_PTYPE_REPLY;
+#else
 		pType = (cp_str[MP_CMD1] & 0x01) ? RX_PTYPE_READ : RX_PTYPE_WRITE;
-
+#endif
 		//It's addressed to me. Function pointer array will call
 		//the appropriate handler (as defined in flexsea_system):
 		if((cmd_7bits <= MAX_CMD_CODE) && (pType <= RX_PTYPE_MAX_INDEX))
