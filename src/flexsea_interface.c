@@ -114,14 +114,14 @@ uint8_t receiveFxPacket(Port p) {
 		return 1;
 
 	cp->bytesReadyFlag--;	// = 0;
-	uint8_t error = 0, parseResult = 0;
+	uint8_t parseResult = 0;
 
 	//	uint16_t numBytesConverted = unpack_multi_payload_cb(&cp->circularBuff, &cp->in);
 	uint16_t numBytesConverted = unpack_multi_payload_cb_cached(&cp->circularBuff, &cp->in, &cp->parsingCachedIndex);
 
 	if(numBytesConverted > 0)
 	{
-		error = circ_buff_move_head(&cp->circularBuff, numBytesConverted);
+		circ_buff_move_head(&cp->circularBuff, numBytesConverted);
 		cp->parsingCachedIndex -= numBytesConverted;
 	}
 
