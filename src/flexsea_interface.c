@@ -40,6 +40,7 @@ extern "C" {
 #include "flexsea_comm_multi.h"
 #include "flexsea_payload.h"
 #include "flexsea_circular_buffer.h"
+#include "user-mn.h"
 
 #ifndef BOARD_TYPE_FLEXSEA_PLAN
 
@@ -158,8 +159,13 @@ uint8_t transmitFxPacket(Port p) {
 		uint8_t success = 0;
 		if(p == PORT_WIRELESS)
 		{
+#if(defined USE_UART3)
 			puts_expUart(cp->out.packed[frameId], SIZE_OF_MULTIFRAME(cp->out.packed[frameId]));
 			success = 1;
+#elif(defined USE_UART4)
+			puts_expUart2(cp->out.packed[frameId], SIZE_OF_MULTIFRAME(cp->out.packed[frameId]));
+			success = 1;
+#endif
 		}
 		else if(p == PORT_USB)
 		{
@@ -180,7 +186,7 @@ uint8_t transmitFxPacket(Port p) {
 		else
 		{
 			// maybe we should be checking for USBD_BUSY or USBD_FAIL
-			return 1;//(Handle errors here)
+			return 1; //(Handle errors here)
 		}
 
 	}

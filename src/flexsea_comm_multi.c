@@ -67,6 +67,7 @@ extern "C" {
 #include "flexsea_payload.h"
 #include "flexsea.h"
 #include "flexsea_device_spec.h"
+#include "flexsea_user_structs.h"
 
 //****************************************************************************
 // Variable(s)

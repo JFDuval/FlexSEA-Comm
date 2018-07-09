@@ -137,7 +137,7 @@ uint8_t comm_gen_str(uint8_t payload[], uint8_t *cstr, uint8_t bytes)
 		idx++;
 	}
 
-	if(idx == COMM_STR_BUF_LEN)
+	if((idx + 2) >= COMM_STR_BUF_LEN)
 	{
 		//Too long, abort:
 		memset(cstr, 0, COMM_STR_BUF_LEN);	//Clear string
