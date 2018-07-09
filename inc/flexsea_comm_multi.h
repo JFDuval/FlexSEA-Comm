@@ -59,6 +59,7 @@ typedef struct MultiCommPeriph_struct
 	uint8_t unpackedPacketsAvailable;
 	uint8_t packetReady;
 	uint8_t timeStamp;
+	int parsingCachedIndex;
 
 	//Data:
 	circularBuffer_t circularBuff;
@@ -80,6 +81,7 @@ uint8_t parseReadyMultiString(MultiCommPeriph* cp);
 uint8_t receiveAndPackResponse(uint8_t cmd_7bits, uint8_t pType, MultiPacketInfo *info, MultiCommPeriph* cp);
 void setMsgInfo(uint8_t* outbuf, uint8_t xid, uint8_t rid, uint8_t cmdcode, uint8_t cmdtype, uint32_t timestamp);
 uint16_t unpack_multi_payload_cb(circularBuffer_t *cb, MultiWrapper* p);
+uint16_t unpack_multi_payload_cb_cached(circularBuffer_t *cb, MultiWrapper* p, int *cacheStart);
 uint8_t packMultiPacket(MultiWrapper* p);
 void resetToPacketId(MultiWrapper* p, uint8_t id);
 
@@ -96,7 +98,7 @@ void resetToPacketId(MultiWrapper* p, uint8_t id);
 //****************************************************************************
 // Shared variable(s)
 //****************************************************************************
-extern MultiCommPeriph usbMultiPeriph;
+
 extern MultiCommPeriph comm_multi_periph[NUMBER_OF_PORTS];
 
 #ifdef __cplusplus

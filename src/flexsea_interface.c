@@ -116,10 +116,14 @@ uint8_t receiveFxPacket(Port p) {
 	cp->bytesReadyFlag--;	// = 0;
 	uint8_t error = 0, parseResult = 0;
 
-	uint16_t numBytesConverted = unpack_multi_payload_cb(&cp->circularBuff, &cp->in);
+	//	uint16_t numBytesConverted = unpack_multi_payload_cb(&cp->circularBuff, &cp->in);
+	uint16_t numBytesConverted = unpack_multi_payload_cb_cached(&cp->circularBuff, &cp->in, &cp->parsingCachedIndex);
 
 	if(numBytesConverted > 0)
+	{
 		error = circ_buff_move_head(&cp->circularBuff, numBytesConverted);
+		cp->parsingCachedIndex -= numBytesConverted;
+	}
 
 	// check if the parse resulted in a completed multi packet, and that said multipacket is not a re-receive
 	if(cp->in.isMultiComplete && cp->in.currentMultiPacket != lastPacketIds[p])
