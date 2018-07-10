@@ -516,6 +516,22 @@ void resetToPacketId(MultiWrapper* p, uint8_t id)
 	memset(p->unpacked, 0, UNPACKED_BUFF_SIZE);
 }
 
+int16_t copyIntoMultiPacket(MultiCommPeriph* p, uint8_t *src, uint16_t nb)
+{
+	circularBuffer_t *cb = &p->circularBuff;
+	int16_t nOverwritten = circ_buff_get_size(cb) + nb - CB_BUF_LEN;
+	circ_buff_write(cb, src, nb);
+
+	if(nOverwritten > 0)
+	{
+		p->parsingCachedIndex -= nOverwritten;
+		if(p->parsingCachedIndex < 0) p->parsingCachedIndex = 0;
+	}
+
+	p->bytesReadyFlag++;
+	return 0;
+}
+
 #ifdef __cplusplus
 }
 #endif

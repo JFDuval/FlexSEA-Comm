@@ -84,6 +84,7 @@ uint16_t unpack_multi_payload_cb(circularBuffer_t *cb, MultiWrapper* p);
 uint16_t unpack_multi_payload_cb_cached(circularBuffer_t *cb, MultiWrapper* p, int *cacheStart);
 uint8_t packMultiPacket(MultiWrapper* p);
 void resetToPacketId(MultiWrapper* p, uint8_t id);
+int16_t copyIntoMultiPacket(MultiCommPeriph* p, uint8_t *src, uint16_t nb);
 
 //****************************************************************************
 // Definition(s):
