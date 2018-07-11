@@ -187,15 +187,13 @@ uint8_t transmitFxPacket(Port p) {
 				cp->out.isMultiComplete = 1;
 
 		}
-		else
-		{
-			// maybe we should be checking for USBD_BUSY or USBD_FAIL
-			return 1; //(Handle errors here)
-		}
+
+		// maybe we should be checking for USBD_BUSY or USBD_FAIL
+		return success ? 0 : 1;
 
 	}
 
-	return 0;
+	return -1;
 }
 #endif
 
