@@ -446,9 +446,6 @@ uint8_t receiveAndFillResponse(uint8_t cmd_7bits, uint8_t pType, MultiPacketInfo
 
 		// set multipacket id's to match
 		cp->out.currentMultiPacket = cp->in.currentMultiPacket;
-
-//		error = packMultiPacket(&cp->out);
-
 	}
 	cp->in.frameMap = 0;
 	return error;
