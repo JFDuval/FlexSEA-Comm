@@ -372,27 +372,28 @@ uint8_t packMultiPacket(MultiWrapper* p) {
 	while(i < p->unpackedIdx && frameId < MAX_FRAMES_PER_MULTI_PACKET)
 	{
 			uint8_t *frame = p->packed[frameId];
+			uint8_t checksum = 0;							//checksum only adds actual data, not any of the frame stuff
 			j=0;
 			frame[0] = MULTI_SOF;							// set the start of frame byte
 			while(j < (SPACE-1) && i < p->unpackedIdx)		// fill in the data
 			{
 				if (BYTE_NEEDS_ESCAPE(p->unpacked[i]))
 				{
+					checksum += MULTI_ESC;
 					frame[MULTI_DATA_OFFSET+(j++)] = MULTI_ESC;
 				}
+				checksum += p->unpacked[i];
 				frame[MULTI_DATA_OFFSET+(j++)] = p->unpacked[i++];
 			}
 
 			//if the next byte doesn't need an escape, then we can add it
 			if(j < SPACE && i < p->unpackedIdx && !BYTE_NEEDS_ESCAPE(p->unpacked[i]))
+			{
+				checksum += p->unpacked[i];
 				frame[MULTI_DATA_OFFSET+(j++)] = p->unpacked[i++];
+			}
 
 			frame[1] = j;								// set the frame's num bytes
-
-			//checksum only adds actual data, not any of the frame stuff
-			uint8_t checksum = 0;
-			for(j=0; j < frame[1]; j++)
-				checksum += frame[MULTI_DATA_OFFSET+j];
 
 			uint8_t checksumPos = MULTI_CHECKSUM_POS_FROM_SOF(0, frame[1]);
 			frame[checksumPos] = checksum;						// set the checksum
@@ -410,12 +411,12 @@ uint8_t packMultiPacket(MultiWrapper* p) {
 	// if it did all fit we just need to fill the multiInfo byte now that we know how many frames we have
 	// frameId now holds the id of the last frame in the packet
 	uint8_t lastFrameIdInPacket = frameId;
-	uint8_t multiInfoPos = MULTI_INFO_POS_FROM_SOF(0);
 
-	p->frameMap = 0;									// set the multiInfo
+	// set the multiInfo
+	p->frameMap = 0;
 	for(frameId=0; frameId <= lastFrameIdInPacket; frameId++)
 	{
-		p->packed[frameId][multiInfoPos] = MULTI_GENINFO(p->currentMultiPacket, frameId, lastFrameIdInPacket);
+		p->packed[frameId][MULTI_INFO_POS_FROM_SOF(0)] = MULTI_GENINFO(p->currentMultiPacket, frameId, lastFrameIdInPacket);
 		p->frameMap |= (1 << frameId);
 	}
 
