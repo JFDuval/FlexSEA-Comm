@@ -37,8 +37,21 @@ extern "C" {
 
 #include "flexsea.h"
 #include "flexsea_comm.h"
+#include "flexsea_comm_multi.h"
 #include "flexsea_payload.h"
 #include "flexsea_circular_buffer.h"
+#include "user-mn.h"
+
+#ifndef BOARD_TYPE_FLEXSEA_PLAN
+
+#ifndef DEPHY
+#include "uarts.h"
+#else
+#include "usart.h"
+#endif // DEPHY
+
+#include "usbd_cdc_if.h"
+#endif // BOARD_TYPE_FLEXSEA_PLAN
 
 //****************************************************************************
 // Variable(s)
@@ -88,6 +101,101 @@ uint8_t receiveFlexSEABytes(uint8_t *d, uint8_t len, uint8_t autoParse)
 
 	return ppFlag;
 }
+
+// This function receives a comm string stored in the multipacket comm periph specified by p
+// TODO: implement for everything outside USB
+uint8_t receiveFxPacket(Port p) {
+
+	static int8_t lastPacketIds[NUMBER_OF_PORTS] = { -1, -1, -1, -1, -1, -1 };
+
+	MultiCommPeriph *cp = comm_multi_periph + p;
+
+	if(!(cp->bytesReadyFlag > 0))
+		return 1;
+
+	cp->bytesReadyFlag--;	// = 0;
+	uint8_t parseResult = 0;
+
+	//	uint16_t numBytesConverted = unpack_multi_payload_cb(&cp->circularBuff, &cp->in);
+	uint16_t numBytesConverted = unpack_multi_payload_cb_cached(&cp->circularBuff, &cp->in, &cp->parsingCachedIndex);
+
+	if(numBytesConverted > 0)
+	{
+		circ_buff_move_head(&cp->circularBuff, numBytesConverted);
+		cp->parsingCachedIndex -= numBytesConverted;
+	}
+
+	// check if the parse resulted in a completed multi packet, and that said multipacket is not a re-receive
+	if(cp->in.isMultiComplete && cp->in.currentMultiPacket != lastPacketIds[p])
+	{
+		parseResult = parseReadyMultiString(cp);
+		lastPacketIds[p] = cp->in.currentMultiPacket;
+	}
+
+	return parseResult != PARSE_SUCCESSFUL;
+}
+
+#ifdef BOARD_TYPE_FLEXSEA_MANAGE
+// TODO: this function is completely manage specific, and it ought not be
+
+
+uint8_t transmitFxPacket(Port p) {
+
+	MultiCommPeriph *cp = comm_multi_periph + p;
+
+	//check if the periph has anything to send
+	if(cp->out.frameMap > 0 && !cp->out.isMultiComplete)
+	{
+		uint8_t frameId = 0;
+		//figure out the next frame to send
+		while((cp->out.frameMap & (1 << frameId)) == 0)
+			frameId++;
+
+		//check that the frameid is valid
+		if(frameId >= MAX_FRAMES_PER_MULTI_PACKET)
+		{
+			// if its not valid we just discard the multi packet frames, setting the flags accordingly
+			cp->out.frameMap = 0;
+			cp->out.isMultiComplete = 1;
+			return 1;	// return an error
+		}
+
+		uint8_t success = 0;
+		if(p == PORT_WIRELESS)
+		{
+#if(defined USE_UART3)
+			puts_expUart(cp->out.packed[frameId], SIZE_OF_MULTIFRAME(cp->out.packed[frameId]));
+			success = 1;
+#elif(defined USE_UART4)
+			puts_expUart2(cp->out.packed[frameId], SIZE_OF_MULTIFRAME(cp->out.packed[frameId]));
+			success = 1;
+#endif
+		}
+		else if(p == PORT_USB)
+		{
+			success = !CDC_CheckBusy_FS() && USBD_OK == CDC_Transmit_FS(cp->out.packed[frameId], SIZE_OF_MULTIFRAME(cp->out.packed[frameId]));
+		}
+		else
+			success = 1; // unimplemented port we just pretend its all good? TODO: something smarter?
+
+		if(success)
+		{
+			//mark frame as sent
+			cp->out.frameMap &= (   ~(1 << frameId)   );
+
+			if(cp->out.frameMap == 0)
+				cp->out.isMultiComplete = 1;
+
+		}
+
+		// maybe we should be checking for USBD_BUSY or USBD_FAIL
+		return success ? 0 : 1;
+
+	}
+
+	return -1;
+}
+#endif
 
 //****************************************************************************
 // Private Function(s):

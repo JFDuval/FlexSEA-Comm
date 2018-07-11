@@ -64,6 +64,7 @@ extern "C" {
 #include <stdint.h>
 #include <flexsea_comm.h>
 
+#include "flexsea_user_structs.h"
 //****************************************************************************
 // Variable(s)
 //****************************************************************************
@@ -95,6 +96,8 @@ uint32_t cmd_bad_checksum = 0;
 PacketWrapper packet[NUMBER_OF_PORTS][2];
 CommPeriph commPeriph[NUMBER_OF_PORTS];
 
+
+
 struct commSpy_s commSpy1 = {0,0,0,0,0,0,0};
 
 //****************************************************************************
@@ -118,7 +121,7 @@ uint8_t comm_gen_str(uint8_t payload[], uint8_t *cstr, uint8_t bytes)
 	//Fill comm_str with payload and add ESCAPE characters
 	escapes = 0;
 	idx = 2;
-	for(i = 0; i < bytes; i++)
+	for(i = 0; i < bytes && idx < COMM_STR_BUF_LEN; i++)
 	{
 		if ((payload[i] == HEADER) || (payload[i] == FOOTER) || (payload[i] == ESCAPE))
 		{
@@ -135,6 +138,14 @@ uint8_t comm_gen_str(uint8_t payload[], uint8_t *cstr, uint8_t bytes)
 			checksum += cstr[idx];
 		}
 		idx++;
+	}
+
+	if((idx + 2) >= COMM_STR_BUF_LEN)
+	{
+		//Too long, abort:
+		memset(cstr, 0, COMM_STR_BUF_LEN);	//Clear string
+		rigid1.mn.genVar[9] = 0x00AA;
+		return 0;
 	}
 
 	total_bytes = bytes + escapes;
@@ -166,39 +177,6 @@ uint8_t comm_gen_str(uint8_t payload[], uint8_t *cstr, uint8_t bytes)
 	return (3 + total_bytes);
 }
 
-//To avoid sharing buffers in multiple files we use specific functions:
-/*
-int8_t unpack_payload_1(void)
-{
-	return unpack_payload(rx_buf_1, packed_1, rx_command_1);
-}
-
-int8_t unpack_payload_2(void)
-{
-	return unpack_payload(rx_buf_2, packed_2, rx_command_2);
-}
-
-int8_t unpack_payload_3(void)
-{
-	return unpack_payload(rx_buf_3, packed_3, rx_command_3);
-}
-
-int8_t unpack_payload_4(void)
-{
-	return unpack_payload(rx_buf_4, packed_4, rx_command_4);
-}
-
-int8_t unpack_payload_5(void)
-{
-	return unpack_payload(rx_buf_5, packed_5, rx_command_5);
-}
-
-int8_t unpack_payload_6(void)
-{
-	return unpack_payload(rx_buf_6, packed_6, rx_command_6);
-}
-*/
-
 /*
 //Special wrapper for unit test code:
 int8_t unpack_payload_test(uint8_t *buf, uint8_t *packed, uint8_t rx_cmd[PACKAGED_PAYLOAD_LEN])
@@ -226,132 +204,6 @@ void generateRandomUint8_tArray(uint8_t *arr, uint8_t size)
 	{
 		arr[i] = generateRandomUint8_t();
 	}
-}
-
-//Take a buffer as an argument, returns the number of decoded payload packets
-//ToDo: The error codes are not always right, but if it's < 0 you know it didn't
-//find a valid string
-int8_t unpack_payload(uint8_t *buf, uint8_t *packed, uint8_t rx_cmd[PACKAGED_PAYLOAD_LEN])
-{
-	uint32_t i = 0, j = 0, k = 0, idx = 0, h = 0;
-	uint32_t bytes = 0, possible_footer = 0, possible_footer_pos = 0;
-	uint8_t checksum = 0, skip = 0, payload_strings = 0;
-	uint8_t rx_buf_tmp[RX_BUF_LEN];
-	uint8_t foundHeader = 0;
-	int8_t tmpRetVal = 0;
-
-	memset(rx_buf_tmp, 0, RX_BUF_LEN);
-
-	for(i = 0; i < (RX_BUF_LEN - 2); i++)
-	{
-		if(buf[i] == HEADER)
-		{
-			foundHeader++;
-			bytes = buf[i+1];
-			possible_footer_pos = i+3+bytes;
-
-			if(possible_footer_pos <= RX_BUF_LEN)
-			{
-				//We have enough bytes for a full string
-				possible_footer = buf[possible_footer_pos];
-				if(possible_footer == FOOTER)
-				{
-					//Correctly framed string
-					k = 0;
-					for(j = i; j <= possible_footer_pos; j++)
-					{
-						//Copy string in temp buffer
-						rx_buf_tmp[k] = buf[j];
-						k++;
-					}
-
-					//Is the checksum OK?
-					checksum = 0;
-					for (k = 0; k < bytes; k++)
-					{
-						checksum = checksum + rx_buf_tmp[2+k];
-					}
-
-					if(checksum == rx_buf_tmp[2+bytes])
-					{
-						//Now we de-escap and de-frame to get the payload
-						idx = 0;
-						skip = 0;
-						for(k = 2; k < (unsigned int)(2+bytes); k++)
-						{
-							if(((rx_buf_tmp[k] == HEADER) || \
-								(rx_buf_tmp[k] == FOOTER) || \
-								(rx_buf_tmp[k] == ESCAPE)) && skip == 0)
-							{
-								skip = 1;
-							}
-							else
-							{
-								skip = 0;
-								rx_cmd[idx] = rx_buf_tmp[k];
-								idx++;
-							}
-						}
-
-						//At this point we have extracted a valid string
-						payload_strings++;
-						cmd_valid++;
-
-						//Remove the string to avoid double detection, and
-						//save a copy of it
-						int cnt = 0;
-						for(h = i; h <= possible_footer_pos; h++)
-						{
-							packed[cnt++] = buf[h];
-							buf[h] = 0;
-						}
-
-						tmpRetVal = payload_strings;
-					}
-					else
-					{
-						//Remove the string to avoid double detection
-						for(h = i; h <= possible_footer_pos; h++)
-						{
-							buf[h] = 0;
-						}
-
-						cmd_bad_checksum++;
-
-						tmpRetVal = UNPACK_ERR_CHECKSUM;
-					}
-				}
-				else
-				{
-					tmpRetVal = UNPACK_ERR_FOOTER;
-				}
-			}
-			else
-			{
-				tmpRetVal = UNPACK_ERR_LEN;
-			}
-		}
-	}
-
-	if(payload_strings > 0)
-	{
-		//Returns the number of decoded strings
-		return payload_strings;
-	}
-
-	if(tmpRetVal != 0)
-	{
-		return tmpRetVal;
-	}
-
-	if(!foundHeader)
-	{
-		//Error - return with error code:
-		return UNPACK_ERR_HEADER;
-	}
-
-	//Default
-	return 0;
 }
 
 uint16_t unpack_payload_cb(circularBuffer_t *cb, uint8_t *packed, uint8_t unpacked[PACKAGED_PAYLOAD_LEN])
@@ -472,11 +324,6 @@ void initCommPeriph(CommPeriph *cp, Port port, PortType pt, uint8_t *input, \
 
 	cp->tx.bytesReadyFlag = 0;
 	cp->tx.unpackedPacketsAvailable = 0;
-//	cp->tx.unpackedPtr = cp->tx.unpacked;
-//	cp->tx.packedPtr = cp->tx.packed;
-//	memset(cp->tx.packed, 0, COMM_PERIPH_ARR_LEN);
-//	memset(cp->tx.unpacked, 0, COMM_PERIPH_ARR_LEN);
-
 	linkCommPeriphPacketWrappers(cp, inbound, outbound);
 }
 

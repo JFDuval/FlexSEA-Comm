@@ -64,6 +64,8 @@ uint8_t test_payload[PAYLOAD_BUF_LEN];
 void (*flexsea_payload_ptr[MAX_CMD_CODE][RX_PTYPE_MAX_INDEX+1]) \
 		(uint8_t *buf, uint8_t *info);
 
+void (*flexsea_multipayload_ptr[MAX_CMD_CODE][RX_PTYPE_MAX_INDEX+1]) \
+		(uint8_t *msgBuf, MultiPacketInfo *info, uint8_t *responseBuf, uint16_t* responseLen);
 //****************************************************************************
 // Private Function Prototype(s)
 //****************************************************************************
@@ -77,6 +79,14 @@ unsigned int flexsea_error(unsigned int err_code)
 {
 	//ToDo something useful
 	return err_code;
+}
+
+void fillMultiInfoFromBuf(MultiPacketInfo *mInfo, uint8_t* buf, uint8_t* info)
+{
+	mInfo->portIn = info[0];
+//	mInfo->portOut = info[1];
+	mInfo->xid = buf[P_XID];
+	mInfo->rid = buf[P_RID];
 }
 
 //Splits 1 uint16 in 2 bytes, stores them in buf[index] and increments index

@@ -89,7 +89,7 @@ void update_rx_buf_array_6(uint8_t *new_array, uint32_t len);
 //****************************************************************************
 
 extern circularBuffer_t rx_buf_circ_1, rx_buf_circ_2, rx_buf_circ_3;
-extern circularBuffer_t rx_buf_circ_4, rx_buf_circ_5, rx_buf_circ_6;
+extern circularBuffer_t rx_buf_circ_4, rx_buf_circ_5, rx_buf_circ_6, rx_buf_circ_7;
 
 #ifdef __cplusplus
 }
