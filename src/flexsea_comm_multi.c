@@ -425,7 +425,7 @@ uint8_t packMultiPacket(MultiWrapper* p) {
 	return 0;
 }
 
-uint8_t receiveAndPackResponse(uint8_t cmd_7bits, uint8_t pType, MultiPacketInfo* info, MultiCommPeriph* cp)
+uint8_t receiveAndFillResponse(uint8_t cmd_7bits, uint8_t pType, MultiPacketInfo* info, MultiCommPeriph* cp)
 {
 	// initialize the response length to 0
 	// Our index is the length of response.
@@ -446,7 +446,9 @@ uint8_t receiveAndPackResponse(uint8_t cmd_7bits, uint8_t pType, MultiPacketInfo
 
 		// set multipacket id's to match
 		cp->out.currentMultiPacket = cp->in.currentMultiPacket;
-		error = packMultiPacket(&cp->out);
+
+//		error = packMultiPacket(&cp->out);
+
 	}
 	cp->in.frameMap = 0;
 	return error;
@@ -493,7 +495,7 @@ uint8_t parseReadyMultiString(MultiCommPeriph* cp)
 		//the appropriate handler (as defined in flexsea_system):
 		if((cmd_7bits <= MAX_CMD_CODE) && (pType <= RX_PTYPE_MAX_INDEX))
 		{
-			uint8_t error = receiveAndPackResponse(cmd_7bits, pType, &info, cp);
+			uint8_t error = receiveAndFillResponse(cmd_7bits, pType, &info, cp);
 			if(error)
 				return PARSE_DEFAULT;
 		}
@@ -501,7 +503,7 @@ uint8_t parseReadyMultiString(MultiCommPeriph* cp)
 	else if(cp->in.unpacked[MP_RID] == 0 && cmd_7bits == CMD_SYSDATA)
 	{
 		cp->in.unpacked[MP_DATA1] = SYSDATA_WHO_AM_I_FLAG; // results in whoami msg
-		uint8_t error = receiveAndPackResponse(cmd_7bits, RX_PTYPE_READ, &info, cp);
+		uint8_t error = receiveAndFillResponse(cmd_7bits, RX_PTYPE_READ, &info, cp);
 		if(error)
 			return PARSE_DEFAULT;
 	}
