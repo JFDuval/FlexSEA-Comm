@@ -125,11 +125,14 @@ uint8_t comm_gen_str(uint8_t payload[], uint8_t *cstr, uint8_t bytes)
 			escapes = escapes + 1;
 			cstr[idx] = ESCAPE;
 			cstr[idx+1] = payload[i];
+			checksum += cstr[idx];
+			checksum += cstr[idx+1];
 			idx = idx + 1;
 		}
 		else
 		{
 			cstr[idx] = payload[i];
+			checksum += cstr[idx];
 		}
 		idx++;
 	}
@@ -148,13 +151,6 @@ uint8_t comm_gen_str(uint8_t payload[], uint8_t *cstr, uint8_t bytes)
 		memset(cstr, 0, COMM_STR_BUF_LEN);	//Clear string
 		commSpy1.retVal = 0;
 		return 0;
-	}
-
-	//Checksum:
-	checksum = 0;
-	for (i = 0; i < total_bytes; i++)
-	{
-		checksum = checksum + cstr[2+i];
 	}
 
 	commSpy1.checksum = checksum;
