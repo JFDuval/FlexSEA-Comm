@@ -117,123 +117,134 @@ void initMultiPeriph(MultiCommPeriph *cp, Port port, PortType pt)
 
 uint16_t unpack_multi_payload_cb_cached(circularBuffer_t *cb, MultiWrapper* p, int *cacheStart)
 {
-	int bufSize = circ_buff_get_size(cb);
+    int bufSize = circ_buff_get_size(cb);
 
-	if(*cacheStart > bufSize)
-	{
-		*cacheStart = 0;
-	}
+    if(*cacheStart > bufSize)
+    {
+        *cacheStart = 0;
+    }
 
-	if(*cacheStart == bufSize)
-	{
-		return 0;
-	}
+    if(*cacheStart == bufSize)
+    {
+        return 0;
+    }
 
-	int foundString = 0, foundFrame = 0, bytes, possibleFooterPos;
-	int lastPossibleHeaderIndex = bufSize - MULTI_NUM_OVERHEAD_BYTES_FRAME;
+    int foundString = 0, foundFrame = 0, bytes, possibleFooterPos;
+    int lastPossibleHeaderIndex = bufSize - MULTI_NUM_OVERHEAD_BYTES_FRAME;
 
-	int headerPos = (*cacheStart)-1;
-	int lastHeaderPos = headerPos;
+    int headerPos = (*cacheStart)-1;
+    int lastHeaderPos = headerPos;
 
-	uint8_t checksum = 0;
+    uint8_t checksum = 0;
 
-	int headers = 0, footers = 0;
-	while(!foundString && lastHeaderPos < lastPossibleHeaderIndex)
-	{
-		headerPos = circ_buff_search(cb, MULTI_SOF, lastHeaderPos+1);
-		//if we can't find a header, we quit searching for strings
-		if(headerPos == -1) break;
+    int headers = 0, footers = 0;
+    while(!foundString && lastHeaderPos < lastPossibleHeaderIndex)
+    {
+        headerPos = circ_buff_search(cb, MULTI_SOF, lastHeaderPos+1);
+        //if we can't find a header, we quit searching for strings
+        if(headerPos == -1) break;
 
-		headers++;
-		foundFrame = 0;
-		if(headerPos <= lastPossibleHeaderIndex)
-		{
-			bytes = circ_buff_peak(cb, headerPos + 1);
-			possibleFooterPos = MULTI_EOF_POS_FROM_SOF(headerPos, bytes);
-			foundFrame = (possibleFooterPos < bufSize && circ_buff_peak(cb, possibleFooterPos) == MULTI_EOF);
-		}
+        headers++;
+        foundFrame = 0;
+        if(headerPos <= lastPossibleHeaderIndex)
+        {
+            bytes = circ_buff_peak(cb, headerPos + 1);
+            possibleFooterPos = MULTI_EOF_POS_FROM_SOF(headerPos, bytes);
+            foundFrame = (possibleFooterPos < bufSize && circ_buff_peak(cb, possibleFooterPos) == MULTI_EOF);
+        }
 
-		if(foundFrame)
-		{
-			footers++;
-			//checksum only adds actual data, not any of the frame stuff
-			checksum = circ_buff_checksum(cb, MULTI_DATA_POS_FROM_SOF(headerPos) , possibleFooterPos-1);
+        if(foundFrame)
+        {
+            footers++;
+            //checksum only adds actual data, not any of the frame stuff
+            checksum = circ_buff_checksum(cb, MULTI_DATA_POS_FROM_SOF(headerPos) , possibleFooterPos-1);
 
-			//if checksum is valid than we found a valid string
-			foundString = (checksum == circ_buff_peak(cb, possibleFooterPos-1));
-		}
+            //if checksum is valid than we found a valid string
+            foundString = (checksum == circ_buff_peak(cb, possibleFooterPos-1));
+        }
 
-		//either we found a frame and it had a valid checksum, or we want to try the next value of i
-		lastHeaderPos = headerPos;
-	}
+        //either we found a frame and it had a valid checksum, or we want to try the next value of i
+        lastHeaderPos = headerPos;
+    }
 
-	int numBytesInPackedString = 0;
-	if(foundString)
-	{
-		numBytesInPackedString = headerPos + bytes + MULTI_NUM_OVERHEAD_BYTES_FRAME;
-		uint8_t multiInfo = circ_buff_peak(cb, headerPos + 2);
-		uint8_t packetId = MULTI_PACKETID(multiInfo);
-		uint8_t frameId  = MULTI_THIS_FRAMEID(multiInfo);
-		uint8_t lastFrameInPacket  = MULTI_LAST_FRAMEID(multiInfo);
+    int numBytesInPackedString = 0;
+    if(foundString)
+    {
+        numBytesInPackedString = headerPos + bytes + MULTI_NUM_OVERHEAD_BYTES_FRAME;
+        uint8_t multiInfo = circ_buff_peak(cb, headerPos + 2);
+        uint8_t packetId = MULTI_PACKETID(multiInfo);
+        uint8_t frameId  = MULTI_THIS_FRAMEID(multiInfo);
+        uint8_t lastFrameInPacket  = MULTI_LAST_FRAMEID(multiInfo);
 
-		//why are we recording the packed data? just to have a linear buffer for the next part?
-		circ_buff_read_section(cb, p->packed[frameId], headerPos, bytes + MULTI_NUM_OVERHEAD_BYTES_FRAME);
+        //why are we recording the packed data? just to have a linear buffer for the next part?
+        circ_buff_read_section(cb, p->packed[frameId], headerPos, bytes + MULTI_NUM_OVERHEAD_BYTES_FRAME);
 
-		//if we just received the first frame of a new packet, we can throw out all the old info,
-		//the previous multi packet was either completed and parsed, or is incomplete and useless anyways
-		if(frameId == 0 && ((packetId != p->currentMultiPacket)
+        //if we just received the first frame of a new packet, we can throw out all the old info,
+        //the previous multi packet was either completed and parsed, or is incomplete and useless anyways
+        if(frameId == 0 && ((packetId != p->currentMultiPacket)
 //				|| (p->frameMap & 0x01)
-				))
-			resetToPacketId(p, packetId);
+                ))
+            resetToPacketId(p, packetId);
 
-		//this should always be true except in some strange case with out of order frames
-		if(packetId == p->currentMultiPacket)
-		{
-			//Note that in this implementation we parse each frame as we receive it and we require them to be received in order
-			//Alternatively, since we store each frame anyways, we could wait to parse until we have received all of them
-			//Then, we'd be able to request a frame that was missed, or gracefully deal with a frame out of order fault
+        //this should always be true except in some strange case with out of order frames
+        if(packetId == p->currentMultiPacket)
+        {
+            //Note that in this implementation we parse each frame as we receive it and we require them to be received in order
+            //Alternatively, since we store each frame anyways, we could wait to parse until we have received all of them
+            //Then, we'd be able to request a frame that was missed, or gracefully deal with a frame out of order fault
 
-			int k, lastValueWasEscape = 0;
-			for(k = 0; k < bytes; k++)
-			{
-				int index = k+3; //zeroth value is header, first value is numbytes, second value is multiInfo, third value is actual data
-				if(p->packed[frameId][index] == MULTI_ESC && (!lastValueWasEscape))
-				{
-					lastValueWasEscape = 1;
-				}
-				else
-				{
-					lastValueWasEscape = 0;
-					p->unpacked[p->unpackedIdx++] = p->packed[frameId][index];
-				}
-			}
+            int k, lastValueWasEscape = 0;
+            for(k = 0; k < bytes; k++)
+            {
+                int index = k+3; //zeroth value is header, first value is numbytes, second value is multiInfo, third value is actual data
+                if(p->packed[frameId][index] == MULTI_ESC && (!lastValueWasEscape))
+                {
+                    lastValueWasEscape = 1;
+                }
+                else
+                {
+                    lastValueWasEscape = 0;
+                    p->unpacked[p->unpackedIdx++] = p->packed[frameId][index];
+                }
+            }
 
-			//set the multi's map to record we received this frame
-			p->frameMap |= (1 << frameId);
+            //set the multi's map to record we received this frame
+            p->frameMap |= (1 << frameId);
 
-			if(frameId == lastFrameInPacket)
-				p->isMultiComplete = 1;
-		}
-	}
+            if(frameId == lastFrameInPacket)
+                p->isMultiComplete = 1;
+        }
+    }
 
-	// update the cached header value
-	if(foundString)
-	{
-		*cacheStart = numBytesInPackedString;
-	}
-	else
-	{
-		*cacheStart = lastHeaderPos;
-		if(lastHeaderPos < bufSize-1)
-		{
-			bytes = circ_buff_peak(cb, headerPos + 1);
-			possibleFooterPos = MULTI_EOF_POS_FROM_SOF(headerPos, bytes);
-			if(possibleFooterPos < bufSize)
-				*cacheStart = bufSize;
-		}
-	}
+    // update the cached header value
+    if(foundString)
+    {
+        *cacheStart = numBytesInPackedString;
+        *cacheStart = circ_buff_search_not(cb, 0, *cacheStart);
+    }
+    else
+    {
+        if(lastHeaderPos >= 0)
+        {
+            *cacheStart = lastHeaderPos;
 
-	return numBytesInPackedString;
+            if(lastHeaderPos < bufSize-1)
+            {
+                bytes = circ_buff_peak(cb, lastHeaderPos + 1);
+                possibleFooterPos = MULTI_EOF_POS_FROM_SOF(lastHeaderPos, bytes);
+                if(possibleFooterPos < bufSize && circ_buff_peak(cb, possibleFooterPos) != MULTI_EOF)
+                {
+                    *cacheStart = possibleFooterPos;
+                }
+            }
+
+        }
+        else
+            *cacheStart = bufSize;
+
+    }
+
+    return numBytesInPackedString;
 }
 
 uint16_t unpack_multi_payload_cb(circularBuffer_t *cb, MultiWrapper* p)
@@ -530,6 +541,20 @@ int16_t copyIntoMultiPacket(MultiCommPeriph* p, uint8_t *src, uint16_t nb)
 
 	p->bytesReadyFlag++;
 	return 0;
+}
+
+void advanceMultiInput(MultiCommPeriph *p, int16_t nb)
+{
+	if(!p || nb < 0) return;
+	if(nb > p->circularBuff.size) nb = p->circularBuff.size;
+
+	circ_buff_move_head(&(p->circularBuff), nb);
+
+	if(p->parsingCachedIndex >= nb)
+		p->parsingCachedIndex -= nb;
+	else
+		p->parsingCachedIndex = 0;
+
 }
 
 #ifdef __cplusplus
