@@ -109,7 +109,7 @@ uint8_t receiveFxPacketByPeriph(MultiCommPeriph *cp)
 {
 
 	if(!(cp->bytesReadyFlag > 0))
-		return 1;
+		return 0;
 
 	cp->bytesReadyFlag--;	// = 0;
 
