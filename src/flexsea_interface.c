@@ -170,13 +170,21 @@ uint8_t transmitFxPacket(Port p) {
 		uint8_t success = 0;
 		if(p == PORT_WIRELESS)
 		{
+			uint8_t isReady = readyToTransfer(p);
+			if(isReady)
+			{
+				uint8_t *data = &(cp->out.packed[frameId][0]);
+				uint16_t datalen = SIZE_OF_MULTIFRAME(cp->out.packed[frameId]);
 #if(defined USE_UART3)
-			puts_expUart(cp->out.packed[frameId], SIZE_OF_MULTIFRAME(cp->out.packed[frameId]));
-			success = 1;
+				puts_expUart(data, datalen);
 #elif(defined USE_UART4)
-			puts_expUart2(cp->out.packed[frameId], SIZE_OF_MULTIFRAME(cp->out.packed[frameId]));
-			success = 1;
+				puts_expUart2(data, datalen);
 #endif
+				success = 1;
+			}
+			else
+				success = 0;
+
 		}
 		else if(p == PORT_USB)
 		{

@@ -181,9 +181,7 @@ uint16_t unpack_multi_payload_cb_cached(circularBuffer_t *cb, MultiWrapper* p, i
 
         //if we just received the first frame of a new packet, we can throw out all the old info,
         //the previous multi packet was either completed and parsed, or is incomplete and useless anyways
-        if(frameId == 0 && ((packetId != p->currentMultiPacket)
-//				|| (p->frameMap & 0x01)
-                ))
+        if(frameId == 0)
             resetToPacketId(p, packetId);
 
         //this should always be true except in some strange case with out of order frames
@@ -300,9 +298,7 @@ uint16_t unpack_multi_payload_cb(circularBuffer_t *cb, MultiWrapper* p)
 
 		//if we just received the first frame of a new packet, we can throw out all the old info,
 		//the previous multi packet was either completed and parsed, or is incomplete and useless anyways
-		if(frameId == 0 && ((packetId != p->currentMultiPacket)
-//				|| (p->frameMap & 0x01)
-				))
+		if(frameId == 0)
 			resetToPacketId(p, packetId);
 
 		//this should always be true except in some strange case with out of order frames
