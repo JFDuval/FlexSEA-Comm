@@ -115,7 +115,7 @@ extern uint8_t comm_str_6[COMM_PERIPH_ARR_LEN];
 extern uint8_t rx_command_6[COMM_PERIPH_ARR_LEN];
 
 extern PacketWrapper packet[NUMBER_OF_PORTS][2];
-extern CommPeriph commPeriph[NUMBER_OF_PORTS];
+extern volatile CommPeriph commPeriph[NUMBER_OF_PORTS];
 
 extern struct commSpy_s commSpy1;
 
