@@ -104,35 +104,42 @@ uint8_t receiveFlexSEABytes(uint8_t *d, uint8_t len, uint8_t autoParse)
 
 // This function receives a comm string stored in the multipacket comm periph specified by p
 // TODO: implement for everything outside USB
-uint8_t receiveFxPacket(Port p) {
 
-	static int8_t lastPacketIds[NUMBER_OF_PORTS] = { -1, -1, -1, -1, -1, -1 };
-
-	MultiCommPeriph *cp = comm_multi_periph + p;
+uint8_t receiveFxPacketByPeriph(MultiCommPeriph *cp)
+{
 
 	if(!(cp->bytesReadyFlag > 0))
-		return 1;
+		return 0;
 
 	cp->bytesReadyFlag--;	// = 0;
-	uint8_t parseResult = 0;
 
-	//	uint16_t numBytesConverted = unpack_multi_payload_cb(&cp->circularBuff, &cp->in);
-	uint16_t numBytesConverted = unpack_multi_payload_cb_cached(&cp->circularBuff, &cp->in, &cp->parsingCachedIndex);
+	cp->in.isMultiComplete = 0;
 
-	if(numBytesConverted > 0)
-	{
-		circ_buff_move_head(&cp->circularBuff, numBytesConverted);
-		cp->parsingCachedIndex -= numBytesConverted;
-	}
+	uint16_t numBytesConverted, parsed = 0;
 
-	// check if the parse resulted in a completed multi packet, and that said multipacket is not a re-receive
-	if(cp->in.isMultiComplete && cp->in.currentMultiPacket != lastPacketIds[p])
-	{
-		parseResult = parseReadyMultiString(cp);
-		lastPacketIds[p] = cp->in.currentMultiPacket;
-	}
+	do {
 
-	return parseResult != PARSE_SUCCESSFUL;
+		numBytesConverted = unpack_multi_payload_cb_cached(&cp->circularBuff, &cp->in, &cp->parsingCachedIndex);
+		advanceMultiInput(cp, cp->parsingCachedIndex);
+
+		if(cp->in.isMultiComplete)
+		{
+
+			if(parseReadyMultiString(cp) == PARSE_SUCCESSFUL)
+				parsed++;
+
+		}
+
+	} while(numBytesConverted);
+
+
+	return parsed;
+}
+
+uint8_t receiveFxPacket(Port p) {
+
+	MultiCommPeriph *cp = comm_multi_periph + p;
+	return receiveFxPacketByPeriph(cp);
 }
 
 #ifdef BOARD_TYPE_FLEXSEA_MANAGE
@@ -163,13 +170,21 @@ uint8_t transmitFxPacket(Port p) {
 		uint8_t success = 0;
 		if(p == PORT_WIRELESS)
 		{
+			uint8_t isReady = readyToTransfer(p);
+			if(isReady)
+			{
+				uint8_t *data = &(cp->out.packed[frameId][0]);
+				uint16_t datalen = SIZE_OF_MULTIFRAME(cp->out.packed[frameId]);
 #if(defined USE_UART3)
-			puts_expUart(cp->out.packed[frameId], SIZE_OF_MULTIFRAME(cp->out.packed[frameId]));
-			success = 1;
+				puts_expUart(data, datalen);
 #elif(defined USE_UART4)
-			puts_expUart2(cp->out.packed[frameId], SIZE_OF_MULTIFRAME(cp->out.packed[frameId]));
-			success = 1;
+				puts_expUart2(data, datalen);
 #endif
+				success = 1;
+			}
+			else
+				success = 0;
+
 		}
 		else if(p == PORT_USB)
 		{

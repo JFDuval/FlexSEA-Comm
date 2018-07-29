@@ -110,6 +110,29 @@ int32_t circ_buff_search(circularBuffer_t* cb, uint8_t value, uint16_t start)
     return -1;
 }
 
+int32_t circ_buff_search_not(circularBuffer_t* cb, uint8_t value, uint16_t start)
+{
+    if(start > cb->size) return -1;
+
+    uint16_t i = start;
+
+    uint16_t idx = (cb->head + start);
+    while(idx < CB_BUF_LEN && i < cb->size && cb->bytes[idx] == value)
+    {
+        idx++;
+        i++;
+    }
+
+    idx = idx % CB_BUF_LEN;
+    while(idx < CB_BUF_LEN && i < cb->size && cb->bytes[idx] == value)
+    {
+        idx++;
+        i++;
+    }
+
+    return i;
+}
+
 uint8_t circ_buff_checksum(circularBuffer_t* cb, uint16_t start, uint16_t end)
 {
     if(start >= cb->size || end > cb->size) return 0;

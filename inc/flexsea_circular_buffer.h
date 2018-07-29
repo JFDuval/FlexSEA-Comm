@@ -37,7 +37,7 @@ extern "C" {
 #include <flexsea_comm_def.h>
 #include <stdint.h>
 
-#define CB_BUF_LEN (RX_BUF_LEN)
+#define CB_BUF_LEN (RX_BUF_LEN * 3)
 
 typedef struct circularBuffer {
 	uint8_t bytes[CB_BUF_LEN];
@@ -58,6 +58,7 @@ int circ_buff_get_space(circularBuffer_t* cb);
 // Convenience Operations for Parsing Buffer Data
 uint8_t circ_buff_peak(circularBuffer_t* cb, uint16_t offset);
 int32_t circ_buff_search(circularBuffer_t* cb, uint8_t value, uint16_t start);
+int32_t circ_buff_search_not(circularBuffer_t* cb, uint8_t value, uint16_t start);
 uint8_t circ_buff_checksum(circularBuffer_t* cb, uint16_t start, uint16_t end);
 
 #ifdef __cplusplus

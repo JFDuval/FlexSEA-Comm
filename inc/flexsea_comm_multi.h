@@ -86,6 +86,8 @@ uint8_t packMultiPacket(MultiWrapper* p);
 void resetToPacketId(MultiWrapper* p, uint8_t id);
 int16_t copyIntoMultiPacket(MultiCommPeriph* p, uint8_t *src, uint16_t nb);
 
+void advanceMultiInput(MultiCommPeriph *p, int16_t nb);
+
 //****************************************************************************
 // Definition(s):
 //****************************************************************************
