@@ -44,7 +44,7 @@ extern "C" {
 
 #ifndef BOARD_TYPE_FLEXSEA_PLAN
 
-#ifndef DEPHY
+#if (HW_VER < 10)
 #include "uarts.h"
 #else
 #include "usart.h"
