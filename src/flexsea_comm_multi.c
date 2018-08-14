@@ -87,7 +87,7 @@ void initMultiWrapper(MultiWrapper *w)
 {
 	int i;
 	for(i=0;i<MAX_FRAMES_PER_MULTI_PACKET;i++)
-		memset(w->packed[i], 0, PACKET_WRAPPER_LEN);
+		memset(&(w->packed[i][0]), 0, PACKET_WRAPPER_LEN);
 
 	memset(w->unpacked, 0, UNPACKED_BUFF_SIZE);
 	w->unpackedIdx = 0;

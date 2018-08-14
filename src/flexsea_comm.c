@@ -94,7 +94,7 @@ uint32_t cmd_valid = 0;
 uint32_t cmd_bad_checksum = 0;
 
 PacketWrapper packet[NUMBER_OF_PORTS][2];
-volatile CommPeriph commPeriph[NUMBER_OF_PORTS];
+CommPeriph commPeriph[NUMBER_OF_PORTS];
 
 
 
