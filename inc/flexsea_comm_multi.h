@@ -68,6 +68,7 @@ typedef struct MultiCommPeriph_struct
 	MultiWrapper in;
 	MultiWrapper out;
 
+
 } MultiCommPeriph;
 
 //****************************************************************************
@@ -80,12 +81,9 @@ uint8_t parseReadyMultiString(MultiCommPeriph* cp);
 
 uint8_t receiveAndFillResponse(uint8_t cmd_7bits, uint8_t pType, MultiPacketInfo *info, MultiCommPeriph* cp);
 void setMsgInfo(uint8_t* outbuf, uint8_t xid, uint8_t rid, uint8_t cmdcode, uint8_t cmdtype, uint32_t timestamp);
-uint16_t unpack_multi_payload_cb(circularBuffer_t *cb, MultiWrapper* p);
-uint16_t unpack_multi_payload_cb_cached(circularBuffer_t *cb, MultiWrapper* p, int *cacheStart);
 uint8_t packMultiPacket(MultiWrapper* p);
 void resetToPacketId(MultiWrapper* p, uint8_t id);
 int16_t copyIntoMultiPacket(MultiCommPeriph* p, uint8_t *src, uint16_t nb);
-
 void advanceMultiInput(MultiCommPeriph *p, int16_t nb);
 
 //****************************************************************************
