@@ -54,37 +54,6 @@ extern uint8_t rx_buf_5[RX_BUF_LEN];
 extern uint8_t rx_buf_6[RX_BUF_LEN];
 
 //****************************************************************************
-// Public Function Prototype(s):
-//****************************************************************************
-
-/*
-void update_rx_buf_byte_1(uint8_t new_byte);
-void update_rx_buf_array_1(uint8_t *new_array, uint32_t len);
-
-void update_rx_buf_byte_2(uint8_t new_byte);
-void update_rx_buf_array_2(uint8_t *new_array, uint32_t len);
-
-void update_rx_buf_byte_3(uint8_t new_byte);
-void update_rx_buf_array_3(uint8_t *new_array, uint32_t len);
-
-void update_rx_buf_byte_4(uint8_t new_byte);
-void update_rx_buf_array_4(uint8_t *new_array, uint32_t len);
-
-void update_rx_buf_byte_5(uint8_t new_byte);
-void update_rx_buf_array_5(uint8_t *new_array, uint32_t len);
-
-void update_rx_buf_byte_6(uint8_t new_byte);
-void update_rx_buf_array_6(uint8_t *new_array, uint32_t len);
-*/
-
-//uint8_t unwrap_buffer(uint8_t *array, uint8_t *new_array, uint32_t len);
-//void resetInputBuffer(uint8_t idx);
-
-//****************************************************************************
-// Definition(s):
-//****************************************************************************
-
-//****************************************************************************
 // New code - not integrated - test in progress:
 //****************************************************************************
 

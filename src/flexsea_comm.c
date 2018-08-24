@@ -176,14 +176,6 @@ uint8_t comm_gen_str(uint8_t payload[], uint8_t *cstr, uint8_t bytes)
 	return (3 + total_bytes);
 }
 
-/*
-//Special wrapper for unit test code:
-int8_t unpack_payload_test(uint8_t *buf, uint8_t *packed, uint8_t rx_cmd[PACKAGED_PAYLOAD_LEN])
-{
-	return unpack_payload(buf, packed, rx_cmd);
-}
-*/
-
 void initRandomGenerator(int seed)
 {
 	srand(seed);
