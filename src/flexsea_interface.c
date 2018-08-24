@@ -38,6 +38,7 @@ extern "C" {
 #include "flexsea.h"
 #include "flexsea_comm.h"
 #include "flexsea_comm_multi.h"
+#include "flexsea_multi_circbuff.h"
 #include "flexsea_payload.h"
 #include "flexsea_circular_buffer.h"
 #include "user-mn.h"
