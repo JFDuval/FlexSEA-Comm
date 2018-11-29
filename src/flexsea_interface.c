@@ -169,18 +169,24 @@ uint8_t transmitFxPacket(Port p) {
 		}
 
 		uint8_t success = 0;
-		if(p == PORT_WIRELESS)
+		if(p == PORT_WIRELESS || p == PORT_BWC)
 		{
 			uint8_t isReady = readyToTransfer(p);
 			if(isReady)
 			{
 				uint8_t *data = &(cp->out.packed[frameId][0]);
 				uint16_t datalen = SIZE_OF_MULTIFRAME(cp->out.packed[frameId]);
-#if(defined USE_UART3)
-				puts_expUart(data, datalen);
-#elif(defined USE_UART4)
-				puts_expUart2(data, datalen);
-#endif
+
+				//ToDo replace with mapping function:
+				if(p == PORT_WIRELESS)
+				{
+					puts_expUart2(data, datalen);
+				}
+				else if(p == PORT_BWC)
+				{
+					puts_uart_xb24c(data, datalen);
+				}
+
 				success = 1;
 			}
 			else
