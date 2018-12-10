@@ -184,7 +184,9 @@ uint8_t transmitFxPacket(Port p) {
 				}
 				else if(p == PORT_BWC)
 				{
+					#if defined(USE_XB24C)
 					puts_uart_xb24c(data, datalen);
+					#endif
 				}
 
 				success = 1;
