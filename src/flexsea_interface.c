@@ -180,7 +180,13 @@ uint8_t transmitFxPacket(Port p) {
 				//ToDo replace with mapping function:
 				if(p == PORT_WIRELESS)
 				{
+					#ifdef USE_UART3
+					puts_expUart(data, datalen);
+					#endif
+
+					#ifdef USE_UART4
 					puts_expUart2(data, datalen);
+					#endif
 				}
 				else if(p == PORT_BWC)
 				{
