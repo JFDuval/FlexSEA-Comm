@@ -198,7 +198,22 @@ uint8_t transmitFxPacket(Port p) {
 				success = 1;
 			}
 			else
+			{
 				success = 0;
+
+				/*
+				//Error recovery test:
+				#ifdef USE_UART3
+				static uint16_t failedTransfers = 0;
+				failedTransfers++;
+				if(failedTransfers > 1500)
+				{
+					failedTransfers = 0;
+					resetUsartState(p);
+				}
+				#endif
+				*/
+			}
 
 		}
 		else if(p == PORT_USB)
