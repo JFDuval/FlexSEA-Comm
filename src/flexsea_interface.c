@@ -76,6 +76,20 @@ void receiveFlexSEAPacket(Port p, uint8_t *newPacketFlag,  \
 {
 	uint8_t parseResult = 0;
 
+	//Handle RS-485 transceiver(s):
+	#ifdef BOARD_TYPE_FLEXSEA_MANAGE
+	if(p == PORT_RS485_1)
+	{
+		//Transition to reception:
+		if(commPeriph[p].transState == TS_PREP_TO_RECEIVE)
+		{
+			commPeriph[p].transState = TS_RECEIVE;
+			rs485_set_mode(p, RS485_RX);
+			//From this point on data will be received via the interrupt.
+		}
+	}
+	#endif
+
 	//This replaces flexsea_receive_from_X():
 	commPeriph[p].rx.unpackedPacketsAvailable = tryParseRx(&commPeriph[p], &packet[p][INBOUND]);
 	(*newPacketFlag) = commPeriph[p].rx.unpackedPacketsAvailable;
