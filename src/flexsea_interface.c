@@ -84,7 +84,9 @@ void receiveFlexSEAPacket(Port p, uint8_t *newPacketFlag,  \
 		if(commPeriph[p].transState == TS_PREP_TO_RECEIVE)
 		{
 			commPeriph[p].transState = TS_RECEIVE;
+			#ifdef USE_RS485
 			rs485_set_mode(p, RS485_RX);
+			#endif	//USE_RS485
 			//From this point on data will be received via the interrupt.
 		}
 	}
