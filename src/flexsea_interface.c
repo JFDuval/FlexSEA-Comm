@@ -45,13 +45,25 @@ extern "C" {
 
 #ifndef BOARD_TYPE_FLEXSEA_PLAN
 
-#if (HW_VER < 10)
-#include "uarts.h"
-#else
-#include "usart.h"
-#endif // DEPHY
-
-#include "usbd_cdc_if.h"
+	#if(defined BOARD_TYPE_FLEXSEA_EXECUTE && !defined BOARD_SUBTYPE_RIGID)
+		
+		//Standalone Execute:
+		#include "serial.h"
+		#include "usb.h"
+		
+	#else
+		
+		//Manage or Mn:
+		#if (HW_VER < 10)
+			#include "uarts.h"
+		#else
+			#include "usart.h"
+		#endif // HW_VER < 10)
+		
+		#include "usbd_cdc_if.h"
+		
+	#endif
+	
 #endif // BOARD_TYPE_FLEXSEA_PLAN
 
 //****************************************************************************
