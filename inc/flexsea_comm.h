@@ -59,7 +59,7 @@ void generateRandomUint8_tArray(uint8_t *arr, uint8_t size);
 
 void fillPacketFromCommPeriph(CommPeriph *cp, PacketWrapper *pw);
 void copyPacket(PacketWrapper *from, PacketWrapper *to, TravelDirection td);
-void initCommPeriph(CommPeriph *cp, Port port, PortType pt, uint8_t *input, \
+void initCommPeriph(CommPeriph *cp, Port port, PortType pt, \
 					uint8_t *unpacked, uint8_t *packed, circularBuffer_t* rx_cb, \
 					PacketWrapper *inbound, PacketWrapper *outbound);
 void linkCommPeriphPacketWrappers(CommPeriph *cp, PacketWrapper *inbound, \
@@ -99,7 +99,9 @@ struct commSpy_s
 // Shared variable(s)
 //****************************************************************************
 
+/* LEAN_STACK
 extern uint8_t comm_str_tmp[COMM_STR_BUF_LEN];
+*/
 
 extern uint8_t comm_str_1[COMM_PERIPH_ARR_LEN];
 extern uint8_t rx_command_1[COMM_PERIPH_ARR_LEN];

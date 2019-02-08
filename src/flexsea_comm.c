@@ -69,25 +69,27 @@ extern "C" {
 // Variable(s)
 //****************************************************************************
 
+/* LEAN_STACK
 uint8_t comm_str_tmp[COMM_STR_BUF_LEN];
+*/
 
 uint8_t comm_str_1[COMM_PERIPH_ARR_LEN];
-uint8_t packed_1[COMM_PERIPH_ARR_LEN];
+//uint8_t packed_1[COMM_PERIPH_ARR_LEN];	//LEAN_STACK
 uint8_t rx_command_1[COMM_PERIPH_ARR_LEN];
 uint8_t comm_str_2[COMM_PERIPH_ARR_LEN];
-uint8_t packed_2[COMM_PERIPH_ARR_LEN];
+//uint8_t packed_2[COMM_PERIPH_ARR_LEN];	//LEAN_STACK
 uint8_t rx_command_2[COMM_PERIPH_ARR_LEN];
 uint8_t comm_str_3[COMM_PERIPH_ARR_LEN];
-uint8_t packed_3[COMM_PERIPH_ARR_LEN];
+//uint8_t packed_3[COMM_PERIPH_ARR_LEN];	//LEAN_STACK
 uint8_t rx_command_3[COMM_PERIPH_ARR_LEN];
 uint8_t comm_str_4[COMM_PERIPH_ARR_LEN];
-uint8_t packed_4[COMM_PERIPH_ARR_LEN];
+//uint8_t packed_4[COMM_PERIPH_ARR_LEN];	//LEAN_STACK
 uint8_t rx_command_4[COMM_PERIPH_ARR_LEN];
 uint8_t comm_str_5[COMM_PERIPH_ARR_LEN];
-uint8_t packed_5[COMM_PERIPH_ARR_LEN];
+//uint8_t packed_5[COMM_PERIPH_ARR_LEN];	//LEAN_STACK
 uint8_t rx_command_5[COMM_PERIPH_ARR_LEN];
 uint8_t comm_str_6[COMM_PERIPH_ARR_LEN];
-uint8_t packed_6[COMM_PERIPH_ARR_LEN];
+//uint8_t packed_6[COMM_PERIPH_ARR_LEN];	//LEAN_STACK
 uint8_t rx_command_6[COMM_PERIPH_ARR_LEN];
 
 uint32_t cmd_valid = 0;
@@ -95,8 +97,6 @@ uint32_t cmd_bad_checksum = 0;
 
 PacketWrapper packet[NUMBER_OF_PORTS][2];
 CommPeriph commPeriph[NUMBER_OF_PORTS];
-
-
 
 struct commSpy_s commSpy1 = {0,0,0,0,0,0,0};
 
@@ -293,7 +293,7 @@ void copyPacket(PacketWrapper *from, PacketWrapper *to, TravelDirection td)
 }
 
 //Initialize CommPeriph to defaults:
-void initCommPeriph(CommPeriph *cp, Port port, PortType pt, uint8_t *input, \
+void initCommPeriph(CommPeriph *cp, Port port, PortType pt, \
 					uint8_t *unpacked, uint8_t *packed, circularBuffer_t* rx_cb, \
 					PacketWrapper *inbound, PacketWrapper *outbound)
 {
@@ -303,7 +303,7 @@ void initCommPeriph(CommPeriph *cp, Port port, PortType pt, uint8_t *input, \
 
 	cp->rx.bytesReadyFlag = 0;
 	cp->rx.unpackedPacketsAvailable = 0;
-	cp->rx.inputBufferPtr = input;
+	//cp->rx.inputBufferPtr = input;	//LEAN_STACK
 	cp->rx.unpackedPtr = unpacked;
 	cp->rx.packedPtr = packed;
 	memset(cp->rx.packedPtr, 0, COMM_PERIPH_ARR_LEN);

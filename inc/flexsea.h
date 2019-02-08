@@ -199,10 +199,6 @@ typedef struct
 	uint8_t *unpackedPtr;		//Points to comm_str_
 	uint8_t *packedPtr;			//Points to rx_cmd_
 	circularBuffer_t* circularBuff;
-//	uint8_t unpacked[COMM_PERIPH_ARR_LEN];
-//	uint8_t packed[COMM_PERIPH_ARR_LEN];
-
-	//Note: using both pointers and arrays to ease the refactoring
 }CommPeriphSub;
 
 //Forward declaration:

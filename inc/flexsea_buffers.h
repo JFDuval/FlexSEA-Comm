@@ -46,12 +46,14 @@ extern "C" {
 // Shared variable(s)
 //****************************************************************************
 
+/* LEAN_STACK
 extern uint8_t rx_buf_1[RX_BUF_LEN];
 extern uint8_t rx_buf_2[RX_BUF_LEN];
 extern uint8_t rx_buf_3[RX_BUF_LEN];
 extern uint8_t rx_buf_4[RX_BUF_LEN];
 extern uint8_t rx_buf_5[RX_BUF_LEN];
 extern uint8_t rx_buf_6[RX_BUF_LEN];
+*/
 
 //****************************************************************************
 // New code - not integrated - test in progress:

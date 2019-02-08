@@ -44,12 +44,14 @@ extern "C" {
 
 //Reception buffers - generic names:
 
+/* LEAN_STACK
 uint8_t rx_buf_1[RX_BUF_LEN];
 uint8_t rx_buf_2[RX_BUF_LEN];
 uint8_t rx_buf_3[RX_BUF_LEN];
 uint8_t rx_buf_4[RX_BUF_LEN];
 uint8_t rx_buf_5[RX_BUF_LEN];
 uint8_t rx_buf_6[RX_BUF_LEN];
+*/
 
 //****************************************************************************
 // circular buffers - test coverage could be better:
