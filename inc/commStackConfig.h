@@ -9,7 +9,16 @@ extern "C" {
 
 #ifdef BOARD_TYPE_FLEXSEA_EXECUTE
 
+	#define NUMBER_OF_PORTS					3		//Has to match enum below!
 
+	//Communication port/interface:
+	typedef enum {
+		PORT_RS485_1 = 0,
+		PORT_USB = 1,
+		PORT_WIRELESS = 2,
+		//None
+		PORT_NONE	//PORT_NONE always has to be the last item
+	}Port;
 
 #else
 

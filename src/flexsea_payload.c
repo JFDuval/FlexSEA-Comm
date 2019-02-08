@@ -108,6 +108,7 @@ uint8_t payload_parse_str(PacketWrapper* p)
 		route(p, SLAVE);
 		#endif
 	}
+	#ifndef BOARD_TYPE_FLEXSEA_EXECUTE
 	else if(id == ID_SUB2_MATCH)
 	{
 		//For a slave on bus #2:
@@ -120,6 +121,7 @@ uint8_t payload_parse_str(PacketWrapper* p)
 		p->destinationPort = PORT_EXP;
 		route(p, SLAVE);
 	}
+	#endif	//BOARD_TYPE_FLEXSEA_EXECUTE
 	else if((id == ID_UP_MATCH) || (id == ID_OTHER_MASTER))
 	{
 		//For a master:
