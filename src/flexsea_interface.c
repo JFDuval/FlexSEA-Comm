@@ -171,9 +171,7 @@ uint8_t receiveFxPacket(Port p) {
 	return receiveFxPacketByPeriph(cp);
 }
 
-#ifdef BOARD_TYPE_FLEXSEA_MANAGE
-// TODO: this function is completely manage specific, and it ought not be
-
+#if (defined BOARD_TYPE_FLEXSEA_MANAGE || defined BOARD_TYPE_FLEXSEA_EXECUTE)
 
 uint8_t transmitFxPacket(Port p) {
 
@@ -197,6 +195,7 @@ uint8_t transmitFxPacket(Port p) {
 		}
 
 		uint8_t success = 0;
+		#ifdef BOARD_TYPE_FLEXSEA_MANAGE
 		if(p == PORT_WIRELESS || p == PORT_BWC)
 		{
 			uint8_t isReady = readyToTransfer(p);
@@ -242,14 +241,25 @@ uint8_t transmitFxPacket(Port p) {
 				#endif
 				*/
 			}
-
 		}
 		else if(p == PORT_USB)
 		{
 			success = !CDC_CheckBusy_FS() && USBD_OK == CDC_Transmit_FS(cp->out.packed[frameId], SIZE_OF_MULTIFRAME(cp->out.packed[frameId]));
 		}
 		else
+		{
 			success = 1; // unimplemented port we just pretend its all good? TODO: something smarter?
+		}
+		#endif	//BOARD_TYPE_FLEXSEA_MANAGE
+		
+		#ifdef BOARD_TYPE_FLEXSEA_EXECUTE
+			
+		if(p == PORT_USB)
+		{
+			success = usb_puts(cp->out.packed[frameId], SIZE_OF_MULTIFRAME(cp->out.packed[frameId]));
+		}
+		
+		#endif	//BOARD_TYPE_FLEXSEA_EXECUTE
 
 		if(success)
 		{

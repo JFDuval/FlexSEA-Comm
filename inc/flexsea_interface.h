@@ -51,14 +51,12 @@ uint8_t receiveFlexSEABytes(uint8_t *d, uint8_t len, uint8_t autoParse);
 uint8_t receiveFxPacket(Port p);
 uint8_t transmitFxPacket(Port p);
 
-
-
 uint8_t receiveFxPacketByPeriph(MultiCommPeriph *cp);
-
 
 //****************************************************************************
 // Definition(s):
 //****************************************************************************
+
 
 //****************************************************************************
 // Shared variable(s)
