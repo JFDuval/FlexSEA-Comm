@@ -69,40 +69,14 @@ extern "C" {
 // Variable(s)
 //****************************************************************************
 
-/* LEAN_STACK
-uint8_t comm_str_tmp[COMM_STR_BUF_LEN];
-*/
-
-//LEAN_STACK:
 uint8_t comm_str[NUMBER_OF_PORTS][COMM_PERIPH_ARR_LEN];
 uint8_t rx_command[NUMBER_OF_PORTS][COMM_PERIPH_ARR_LEN];
 
-/*
-//uint8_t comm_str_1[COMM_PERIPH_ARR_LEN];	//LEAN_STACK
-//uint8_t packed_1[COMM_PERIPH_ARR_LEN];	//LEAN_STACK
-uint8_t rx_command_1[COMM_PERIPH_ARR_LEN];
-//uint8_t comm_str_2[COMM_PERIPH_ARR_LEN];	//LEAN_STACK
-//uint8_t packed_2[COMM_PERIPH_ARR_LEN];	//LEAN_STACK
-uint8_t rx_command_2[COMM_PERIPH_ARR_LEN];
-uint8_t comm_str_3[COMM_PERIPH_ARR_LEN];	//LEAN_STACK
-//uint8_t packed_3[COMM_PERIPH_ARR_LEN];	//LEAN_STACK
-uint8_t rx_command_3[COMM_PERIPH_ARR_LEN];
-//uint8_t comm_str_4[COMM_PERIPH_ARR_LEN];	//LEAN_STACK
-//uint8_t packed_4[COMM_PERIPH_ARR_LEN];	//LEAN_STACK
-uint8_t rx_command_4[COMM_PERIPH_ARR_LEN];
-//uint8_t comm_str_5[COMM_PERIPH_ARR_LEN];	//LEAN_STACK
-//uint8_t packed_5[COMM_PERIPH_ARR_LEN];	//LEAN_STACK
-uint8_t rx_command_5[COMM_PERIPH_ARR_LEN];
-//uint8_t comm_str_6[COMM_PERIPH_ARR_LEN];	//LEAN_STACK
-//uint8_t packed_6[COMM_PERIPH_ARR_LEN];	//LEAN_STACK
-uint8_t rx_command_6[COMM_PERIPH_ARR_LEN];
-*/
+PacketWrapper packet[NUMBER_OF_PORTS][2];
+CommPeriph commPeriph[NUMBER_OF_PORTS];
 
 uint32_t cmd_valid = 0;
 uint32_t cmd_bad_checksum = 0;
-
-PacketWrapper packet[NUMBER_OF_PORTS][2];
-CommPeriph commPeriph[NUMBER_OF_PORTS];
 
 struct commSpy_s commSpy1 = {0,0,0,0,0,0,0};
 
