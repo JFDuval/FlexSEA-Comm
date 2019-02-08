@@ -59,8 +59,9 @@ extern uint8_t rx_buf_6[RX_BUF_LEN];
 // New code - not integrated - test in progress:
 //****************************************************************************
 
-extern circularBuffer_t rx_buf_circ_1, rx_buf_circ_2, rx_buf_circ_3;
-extern circularBuffer_t rx_buf_circ_4, rx_buf_circ_5, rx_buf_circ_6, rx_buf_circ_7;
+extern circularBuffer_t rx_buf_circ[NUMBER_OF_PORTS];
+//extern circularBuffer_t rx_buf_circ_1, rx_buf_circ_2, rx_buf_circ_3;	//LEAN_STACK
+//extern circularBuffer_t rx_buf_circ_4, rx_buf_circ_5, rx_buf_circ_6, rx_buf_circ_7;	//LEAN_STACK
 
 #ifdef __cplusplus
 }
