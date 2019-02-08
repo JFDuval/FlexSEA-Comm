@@ -38,6 +38,7 @@ extern "C" {
 #include <stdint.h>
 #include "flexsea_comm_def.h"
 #include <flexsea_circular_buffer.h>
+#include "commStackConfig.h"
 
 //#define USE_DEBUG_PRINTF			//Enable this to debug with the terminal
 
@@ -50,27 +51,6 @@ void SPLIT_16(uint16_t var, uint8_t *buf, uint16_t *index);
 uint16_t REBUILD_UINT16(uint8_t *buf, uint16_t *index);
 void SPLIT_32(uint32_t var, uint8_t *buf, uint16_t *index);
 uint32_t REBUILD_UINT32(uint8_t *buf, uint16_t *index);
-
-//****************************************************************************
-// Definition(s):
-//****************************************************************************
-
-//Communication port/interface:
-typedef enum {
-	//Slave:
-	PORT_RS485_1 = 0,
-	PORT_SUB1  = PORT_RS485_1,
-	PORT_RS485_2 = 1,
-	PORT_SUB2 = PORT_RS485_2,
-	//Master:
-	PORT_USB = 2,
-	PORT_SPI = 3,
-	PORT_WIRELESS = 4,
-	PORT_EXP = 5,
-	PORT_BWC = 6,
-	//None
-	PORT_NONE	//PORT_NONE always has to be the last item
-}Port;
 
 //****************************************************************************
 // Shared variable(s)
