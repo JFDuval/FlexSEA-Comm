@@ -136,9 +136,10 @@ uint8_t receiveFlexSEABytes(uint8_t *d, uint8_t len, uint8_t autoParse)
 
 uint8_t receiveFxPacketByPeriph(MultiCommPeriph *cp)
 {
-
 	if(!(cp->bytesReadyFlag > 0))
+	{
 		return 0;
+	}
 
 	cp->bytesReadyFlag--;	// = 0;
 
@@ -146,21 +147,19 @@ uint8_t receiveFxPacketByPeriph(MultiCommPeriph *cp)
 
 	uint16_t numBytesConverted, parsed = 0;
 
-	do {
-
+	do
+	{
 		numBytesConverted = unpack_multi_payload_cb_cached(&cp->circularBuff, &cp->in, &cp->parsingCachedIndex);
 		advanceMultiInput(cp, cp->parsingCachedIndex);
 
 		if(cp->in.isMultiComplete)
 		{
-
 			if(parseReadyMultiString(cp) == PARSE_SUCCESSFUL)
+			{
 				parsed++;
-
+			}
 		}
-
-	} while(numBytesConverted);
-
+	}while(numBytesConverted);
 
 	return parsed;
 }
@@ -173,8 +172,8 @@ uint8_t receiveFxPacket(Port p) {
 
 #if (defined BOARD_TYPE_FLEXSEA_MANAGE || defined BOARD_TYPE_FLEXSEA_EXECUTE)
 
-uint8_t transmitFxPacket(Port p) {
-
+uint8_t transmitFxPacket(Port p)
+{
 	MultiCommPeriph *cp = comm_multi_periph + p;
 
 	//check if the periph has anything to send
@@ -183,7 +182,9 @@ uint8_t transmitFxPacket(Port p) {
 		uint8_t frameId = 0;
 		//figure out the next frame to send
 		while((cp->out.frameMap & (1 << frameId)) == 0)
+		{
 			frameId++;
+		}
 
 		//check that the frameid is valid
 		if(frameId >= MAX_FRAMES_PER_MULTI_PACKET)
@@ -267,13 +268,13 @@ uint8_t transmitFxPacket(Port p) {
 			cp->out.frameMap &= (   ~(1 << frameId)   );
 
 			if(cp->out.frameMap == 0)
+			{
 				cp->out.isMultiComplete = 1;
-
+			}
 		}
 
 		// maybe we should be checking for USBD_BUSY or USBD_FAIL
 		return success ? 0 : 1;
-
 	}
 
 	return -1;
