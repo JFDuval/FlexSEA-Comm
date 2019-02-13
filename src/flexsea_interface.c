@@ -90,7 +90,7 @@ void receiveFlexSEAPacket(Port p, uint8_t *newPacketFlag,  \
 
 	//Handle RS-485 transceiver(s):
 	#ifdef BOARD_TYPE_FLEXSEA_MANAGE
-	if(p == PORT_RS485_1)
+	if(p == PORT_RS485_1 || p == PORT_RS485_2)
 	{
 		//Transition to reception:
 		if(commPeriph[p].transState == TS_PREP_TO_RECEIVE)
