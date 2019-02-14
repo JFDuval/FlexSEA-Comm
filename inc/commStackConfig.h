@@ -22,27 +22,49 @@ extern "C" {
 
 #else
 
-	//Default: everything enabled
+	#ifdef BOARD_SUBTYPE_HABSOLUTE
 
-	#define NUMBER_OF_PORTS					7		//Has to match enum below!
+		#define NUMBER_OF_PORTS					1		//Has to match enum below!
 
-	//Communication port/interface:
-	typedef enum {
-		//Slave:
-		PORT_RS485_1 = 0,
-		PORT_SUB1  = PORT_RS485_1,
-		PORT_RS485_2 = 1,
-		PORT_SUB2 = PORT_RS485_2,
-		//Master:
-		PORT_USB = 2,
-		PORT_SPI = 3,
-		PORT_WIRELESS = 4,
-		PORT_EXP = 5,
-		PORT_BWC = 6,
-		//None
-		PORT_NONE	//PORT_NONE always has to be the last item
-	}Port;
+		//Communication port/interface: keep everything, but arrange order
+		typedef enum {
+			PORT_USB = 0,	//Only one enabled in this case
+			PORT_RS485_1 = 1,
+			PORT_SUB1  = PORT_RS485_1,
+			PORT_RS485_2 = 2,
+			PORT_SUB2 = PORT_RS485_2,
+			PORT_SPI = 3,
+			PORT_WIRELESS = 4,
+			PORT_EXP = 5,
+			PORT_BWC = 6,
+			//None
+			PORT_NONE	//PORT_NONE always has to be the last item
+		}Port;
 
+	#else
+
+		//Default: everything enabled
+
+		#define NUMBER_OF_PORTS					7		//Has to match enum below!
+
+		//Communication port/interface:
+		typedef enum {
+			//Slave:
+			PORT_RS485_1 = 0,
+			PORT_SUB1  = PORT_RS485_1,
+			PORT_RS485_2 = 1,
+			PORT_SUB2 = PORT_RS485_2,
+			//Master:
+			PORT_USB = 2,
+			PORT_SPI = 3,
+			PORT_WIRELESS = 4,
+			PORT_EXP = 5,
+			PORT_BWC = 6,
+			//None
+			PORT_NONE	//PORT_NONE always has to be the last item
+		}Port;
+
+	#endif
 
 #endif
 
