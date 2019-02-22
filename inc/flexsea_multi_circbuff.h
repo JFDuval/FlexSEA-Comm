@@ -14,6 +14,12 @@ extern "C" {
 
 #include <stdint.h>
 
+#define HEADER  						0xED	//237d
+#define FOOTER  						0xEE	//238d
+#define ESCAPE  						0xE9	//233d
+#define COMM_STR_BUF_LEN				48
+typedef enum state {NoMessage = 0, Head, MultiByteInfo, Reading, Escaped, End} State;
+
 struct MultiWrapper_struct;
 typedef struct MultiWrapper_struct MultiWrapper;
 
