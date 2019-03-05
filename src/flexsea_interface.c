@@ -45,7 +45,7 @@ extern "C" {
 
 #ifndef BOARD_TYPE_FLEXSEA_PLAN
 
-	#if(defined BOARD_TYPE_FLEXSEA_EXECUTE && !defined BOARD_SUBTYPE_RIGID)
+	#if(defined BOARD_TYPE_FLEXSEA_EXECUTE)
 		
 		//Standalone Execute:
 		#include "serial.h"
