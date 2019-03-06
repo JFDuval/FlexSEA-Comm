@@ -18,6 +18,7 @@ extern "C" {
 
 #include "flexsea.h"
 #include "flexsea_multi_frame_packet_def.h"
+#include "flexsea_embedded_mutex.h"
 //****************************************************************************
 // Structure(s)
 //****************************************************************************
@@ -63,6 +64,9 @@ typedef struct MultiCommPeriph_struct
 
 	//Data:
 	circularBuffer_t circularBuff;
+
+	// A lock for the packed and unpacked structure
+	MutexFlag data_guard;
 
 	//Attach PacketWrappers:
 	MultiWrapper in;

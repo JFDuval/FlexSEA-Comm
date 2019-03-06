@@ -105,8 +105,12 @@ void initMultiPeriph(MultiCommPeriph *cp, Port port, PortType pt)
 	cp->unpackedPacketsAvailable = 0;
 	cp->parsingCachedIndex = 0;
 
+	INIT_MUTEX(&(cp->data_guard));
+
+	LOCK_MUTEX(&(cp->data_guard));
 	initMultiWrapper(&(cp->in));
 	initMultiWrapper(&(cp->out));
+	UNLOCK_MUTEX(&(cp->data_guard));
 
 	circ_buff_init(&cp->circularBuff);
 }
@@ -117,11 +121,13 @@ uint8_t tryParse(MultiCommPeriph *cp) {
 	cp->bytesReadyFlag--;	// = 0;
 	uint8_t error = 0;
 
+	LOCK_MUTEX(&(cp->data_guard));
 	uint16_t numBytesConverted = \
 			unpack_multi_payload_cb(&cp->circularBuff, &cp->in);
 
 	if(numBytesConverted > 0)
 		error = circ_buff_move_head(&cp->circularBuff, numBytesConverted);
+	UNLOCK_MUTEX(&(cp->data_guard));
 
 	uint8_t retCode = 0;
 	retCode |= (error ? 2 : 0);
@@ -220,6 +226,7 @@ uint8_t receiveAndFillResponse(uint8_t cmd_7bits, uint8_t pType, MultiPacketInfo
 
 	uint8_t error = 0;
 	//If there is a response we need to route it or w/e
+	LOCK_MUTEX(&(cp->data_guard));
 	if(cp->out.unpackedIdx + MULTI_PACKET_OVERHEAD >= UNPACKED_BUFF_SIZE) {
 		error = 1; // raise an error flag
 	}	else if (cp->out.unpackedIdx) {
@@ -232,6 +239,7 @@ uint8_t receiveAndFillResponse(uint8_t cmd_7bits, uint8_t pType, MultiPacketInfo
 		cp->out.currentMultiPacket = cp->in.currentMultiPacket;
 	}
 	cp->in.frameMap = 0;
+	UNLOCK_MUTEX(&(cp->data_guard));
 	return error;
 }
 
