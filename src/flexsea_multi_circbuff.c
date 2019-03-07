@@ -3,6 +3,8 @@
 #include "flexsea_comm_multi.h"
 #include "flexsea_circular_buffer.h"
 
+#include <string.h>
+
 typedef struct MultiInfoByte_struct {
 	uint8_t packetId;
 	uint8_t frameId;
@@ -153,12 +155,20 @@ int circ_buff_copyToWrapper(circularBuffer_t* cb, int headerPos, MultiWrapper* p
 void circ_buff_copyToUnpacked(circularBuffer_t* cb, int headerPos, int bytes, MultiWrapper* p)
 {
 	int start = (cb->head + headerPos + MULTI_DATA_OFFSET) % CB_BUF_LEN;
+	static uint8_t packed_msg[PACKET_WRAPPER_LEN];
 
 	if(start + bytes > CB_BUF_LEN)
 	{
+		// clear packed message buffer
+		memset(packed_msg, 0x00, sizeof(packed_msg));
+		// calculate number of bytes left till end of circular buffer
 		uint16_t bytesUntilEnd = CB_BUF_LEN - start;
-		p->unpackedIdx += copyEscapedString(p->unpacked, cb->bytes + start, bytesUntilEnd);
-		p->unpackedIdx += copyEscapedString(p->unpacked + p->unpackedIdx, cb->bytes, bytes - bytesUntilEnd);
+		// copy back portion of the buffer
+		memcpy(packed_msg, cb->bytes + start, bytesUntilEnd);
+		// copy front portion of buffer
+		memcpy(packed_msg + bytesUntilEnd, cb->bytes, bytes - bytesUntilEnd);
+		// now unpack the data to get rid of 0xE9 escape characters
+		p->unpackedIdx += copyEscapedString(p->unpacked, packed_msg, bytes);
 	}
 	else
 	{
