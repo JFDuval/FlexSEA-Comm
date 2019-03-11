@@ -35,6 +35,8 @@
 extern "C" {
 #endif
 
+#include "commStackConfig.h"
+
 //****************************************************************************
 // Core features:
 //****************************************************************************
@@ -76,8 +78,6 @@ extern "C" {
 #define ID_UP_MATCH						6		//Addressed to my master
 #define ID_OTHER_MASTER					7		//Addressed to "a" master (special use case)
 #define ID_NO_MATCH						0
-
-#define NUMBER_OF_PORTS					7		//Has to match enum!
 
 //Communication protocol payload fields:
 #define P_XID							0		//Emitter ID

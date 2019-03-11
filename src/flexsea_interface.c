@@ -45,13 +45,25 @@ extern "C" {
 
 #ifndef BOARD_TYPE_FLEXSEA_PLAN
 
-#if (HW_VER < 10)
-#include "uarts.h"
-#else
-#include "usart.h"
-#endif // DEPHY
-
-#include "usbd_cdc_if.h"
+	#if(defined BOARD_TYPE_FLEXSEA_EXECUTE)
+		
+		//Standalone Execute:
+		#include "serial.h"
+		#include "usb.h"
+		
+	#else
+		
+		//Manage or Mn:
+		#if (HW_VER < 10)
+			#include "uarts.h"
+		#else
+			#include "usart.h"
+		#endif // HW_VER < 10)
+		
+		#include "usbd_cdc_if.h"
+		
+	#endif
+	
 #endif // BOARD_TYPE_FLEXSEA_PLAN
 
 //****************************************************************************
@@ -75,6 +87,22 @@ void receiveFlexSEAPacket(Port p, uint8_t *newPacketFlag,  \
 							uint8_t *parsedPacketFlag, uint8_t *watch)
 {
 	uint8_t parseResult = 0;
+
+	//Handle RS-485 transceiver(s):
+	#ifdef BOARD_TYPE_FLEXSEA_MANAGE
+	if(p == PORT_RS485_1 || p == PORT_RS485_2)
+	{
+		//Transition to reception:
+		if(commPeriph[p].transState == TS_PREP_TO_RECEIVE)
+		{
+			commPeriph[p].transState = TS_RECEIVE;
+			#ifdef USE_RS485
+			rs485_set_mode(p, RS485_RX);
+			#endif	//USE_RS485
+			//From this point on data will be received via the interrupt.
+		}
+	}
+	#endif
 
 	//This replaces flexsea_receive_from_X():
 	commPeriph[p].rx.unpackedPacketsAvailable = tryParseRx(&commPeriph[p], &packet[p][INBOUND]);
@@ -108,9 +136,10 @@ uint8_t receiveFlexSEABytes(uint8_t *d, uint8_t len, uint8_t autoParse)
 
 uint8_t receiveFxPacketByPeriph(MultiCommPeriph *cp)
 {
-
 	if(!(cp->bytesReadyFlag > 0))
+	{
 		return 0;
+	}
 
 	cp->bytesReadyFlag--;	// = 0;
 
@@ -118,21 +147,19 @@ uint8_t receiveFxPacketByPeriph(MultiCommPeriph *cp)
 
 	uint16_t numBytesConverted, parsed = 0;
 
-	do {
-
+	do
+	{
 		numBytesConverted = unpack_multi_payload_cb_cached(&cp->circularBuff, &cp->in, &cp->parsingCachedIndex);
 		advanceMultiInput(cp, cp->parsingCachedIndex);
 
 		if(cp->in.isMultiComplete)
 		{
-
 			if(parseReadyMultiString(cp) == PARSE_SUCCESSFUL)
+			{
 				parsed++;
-
+			}
 		}
-
-	} while(numBytesConverted);
-
+	}while(numBytesConverted);
 
 	return parsed;
 }
@@ -143,12 +170,10 @@ uint8_t receiveFxPacket(Port p) {
 	return receiveFxPacketByPeriph(cp);
 }
 
-#ifdef BOARD_TYPE_FLEXSEA_MANAGE
-// TODO: this function is completely manage specific, and it ought not be
+#if (defined BOARD_TYPE_FLEXSEA_MANAGE || defined BOARD_TYPE_FLEXSEA_EXECUTE)
 
-
-uint8_t transmitFxPacket(Port p) {
-
+uint8_t transmitFxPacket(Port p)
+{
 	MultiCommPeriph *cp = comm_multi_periph + p;
 
 	//check if the periph has anything to send
@@ -157,7 +182,9 @@ uint8_t transmitFxPacket(Port p) {
 		uint8_t frameId = 0;
 		//figure out the next frame to send
 		while((cp->out.frameMap & (1 << frameId)) == 0)
+		{
 			frameId++;
+		}
 
 		//check that the frameid is valid
 		if(frameId >= MAX_FRAMES_PER_MULTI_PACKET)
@@ -169,6 +196,7 @@ uint8_t transmitFxPacket(Port p) {
 		}
 
 		uint8_t success = 0;
+		#ifdef BOARD_TYPE_FLEXSEA_MANAGE
 		if(p == PORT_WIRELESS || p == PORT_BWC)
 		{
 			uint8_t isReady = readyToTransfer(p);
@@ -180,25 +208,59 @@ uint8_t transmitFxPacket(Port p) {
 				//ToDo replace with mapping function:
 				if(p == PORT_WIRELESS)
 				{
+					#ifdef USE_UART3
+					puts_expUart(data, datalen);
+					#endif
+
+					#ifdef USE_UART4
 					puts_expUart2(data, datalen);
+					#endif
 				}
 				else if(p == PORT_BWC)
 				{
+					#ifdef USE_XB24C
 					puts_uart_xb24c(data, datalen);
+					#endif
 				}
 
 				success = 1;
 			}
 			else
+			{
 				success = 0;
 
+				/*
+				//Error recovery test:
+				#ifdef USE_UART3
+				static uint16_t failedTransfers = 0;
+				failedTransfers++;
+				if(failedTransfers > 1500)
+				{
+					failedTransfers = 0;
+					resetUsartState(p);
+				}
+				#endif
+				*/
+			}
 		}
 		else if(p == PORT_USB)
 		{
 			success = !CDC_CheckBusy_FS() && USBD_OK == CDC_Transmit_FS(cp->out.packed[frameId], SIZE_OF_MULTIFRAME(cp->out.packed[frameId]));
 		}
 		else
+		{
 			success = 1; // unimplemented port we just pretend its all good? TODO: something smarter?
+		}
+		#endif	//BOARD_TYPE_FLEXSEA_MANAGE
+		
+		#ifdef BOARD_TYPE_FLEXSEA_EXECUTE
+			
+		if(p == PORT_USB)
+		{
+			success = usb_puts(cp->out.packed[frameId], SIZE_OF_MULTIFRAME(cp->out.packed[frameId]));
+		}
+		
+		#endif	//BOARD_TYPE_FLEXSEA_EXECUTE
 
 		if(success)
 		{
@@ -206,13 +268,13 @@ uint8_t transmitFxPacket(Port p) {
 			cp->out.frameMap &= (   ~(1 << frameId)   );
 
 			if(cp->out.frameMap == 0)
+			{
 				cp->out.isMultiComplete = 1;
-
+			}
 		}
 
 		// maybe we should be checking for USBD_BUSY or USBD_FAIL
 		return success ? 0 : 1;
-
 	}
 
 	return -1;

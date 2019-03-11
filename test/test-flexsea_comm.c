@@ -173,7 +173,10 @@ int testCircPackUnpack(circularBuffer_t* cb, uint8_t* comm_str, uint8_t* packed,
 		circ_buff_write(cb, &value, 1);
 	}
 
-	return unpack_payload_cb(cb, packed, unpacked);
+	LOCK_MUTEX(&(cp->data_guard));
+	uint16_t retCode = unpack_payload_cb(cb, packed, unpacked);
+	UNLOCK_MUTEX(&(cp->data_guard));
+	return retCode;
 }
 
 int fillFakeReadAll(uint8_t* fakePayload)

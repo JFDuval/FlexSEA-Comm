@@ -42,21 +42,11 @@ extern "C" {
 // Variable(s)
 //****************************************************************************
 
-//Reception buffers - generic names:
-
-uint8_t rx_buf_1[RX_BUF_LEN];
-uint8_t rx_buf_2[RX_BUF_LEN];
-uint8_t rx_buf_3[RX_BUF_LEN];
-uint8_t rx_buf_4[RX_BUF_LEN];
-uint8_t rx_buf_5[RX_BUF_LEN];
-uint8_t rx_buf_6[RX_BUF_LEN];
-
 //****************************************************************************
 // circular buffers - test coverage could be better:
 //****************************************************************************
 
-circularBuffer_t rx_buf_circ_1, rx_buf_circ_2, rx_buf_circ_3;
-circularBuffer_t rx_buf_circ_4, rx_buf_circ_5, rx_buf_circ_6;
+circularBuffer_t rx_buf_circ[NUMBER_OF_PORTS];
 
 #ifdef __cplusplus
 }

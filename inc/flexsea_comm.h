@@ -59,7 +59,7 @@ void generateRandomUint8_tArray(uint8_t *arr, uint8_t size);
 
 void fillPacketFromCommPeriph(CommPeriph *cp, PacketWrapper *pw);
 void copyPacket(PacketWrapper *from, PacketWrapper *to, TravelDirection td);
-void initCommPeriph(CommPeriph *cp, Port port, PortType pt, uint8_t *input, \
+void initCommPeriph(CommPeriph *cp, Port port, PortType pt, \
 					uint8_t *unpacked, uint8_t *packed, circularBuffer_t* rx_cb, \
 					PacketWrapper *inbound, PacketWrapper *outbound);
 void linkCommPeriphPacketWrappers(CommPeriph *cp, PacketWrapper *inbound, \
@@ -99,20 +99,8 @@ struct commSpy_s
 // Shared variable(s)
 //****************************************************************************
 
-extern uint8_t comm_str_tmp[COMM_STR_BUF_LEN];
-
-extern uint8_t comm_str_1[COMM_PERIPH_ARR_LEN];
-extern uint8_t rx_command_1[COMM_PERIPH_ARR_LEN];
-extern uint8_t comm_str_2[COMM_PERIPH_ARR_LEN];
-extern uint8_t rx_command_2[COMM_PERIPH_ARR_LEN];
-extern uint8_t comm_str_3[COMM_PERIPH_ARR_LEN];
-extern uint8_t rx_command_3[COMM_PERIPH_ARR_LEN];
-extern uint8_t comm_str_4[COMM_PERIPH_ARR_LEN];
-extern uint8_t rx_command_4[COMM_PERIPH_ARR_LEN];
-extern uint8_t comm_str_5[COMM_PERIPH_ARR_LEN];
-extern uint8_t rx_command_5[COMM_PERIPH_ARR_LEN];
-extern uint8_t comm_str_6[COMM_PERIPH_ARR_LEN];
-extern uint8_t rx_command_6[COMM_PERIPH_ARR_LEN];
+extern uint8_t comm_str[NUMBER_OF_PORTS][COMM_PERIPH_ARR_LEN];
+extern uint8_t rx_command[NUMBER_OF_PORTS][COMM_PERIPH_ARR_LEN];
 
 extern PacketWrapper packet[NUMBER_OF_PORTS][2];
 extern CommPeriph commPeriph[NUMBER_OF_PORTS];
