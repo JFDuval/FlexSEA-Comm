@@ -227,7 +227,6 @@ inline uint8_t tryParseRx(CommPeriph *cp, PacketWrapper *pw)
 	cp->rx.bytesReadyFlag--;	// = 0;
 	uint8_t error = 0;
 
-	LOCK_MUTEX(cp->data_guard);
 	uint16_t numBytesConverted = unpack_payload_cb(\
 			cp->rx.circularBuff, \
 			cp->rx.packedPtr, \
@@ -245,7 +244,6 @@ inline uint8_t tryParseRx(CommPeriph *cp, PacketWrapper *pw)
 		// payload_parse_str returns 2 on successful parse
 		//successfulParse = payload_parse_str(pw) == 2;
 	}
-	UNLOCK_MUTEX(cp->data_guard);
 
 	return numBytesConverted > 0 && !error;
 }

@@ -67,9 +67,11 @@ typedef struct MultiCommPeriph_struct
 	//Data:
 	circularBuffer_t circularBuff;
 
-	// A lock for the packed and unpacked structure
+	//A lock for the packed and unpacked structure
+	#ifdef BOARD_TYPE_FLEXSEA_PLAN
 	MutexFlag data_guard;
-
+	#endif
+		
 	//Attach PacketWrappers:
 	MultiWrapper in;
 	MultiWrapper out;

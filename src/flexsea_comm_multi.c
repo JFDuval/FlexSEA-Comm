@@ -105,12 +105,16 @@ void initMultiPeriph(MultiCommPeriph *cp, Port port, PortType pt)
 	cp->unpackedPacketsAvailable = 0;
 	cp->parsingCachedIndex = 0;
 
+	#ifdef BOARD_TYPE_FLEXSEA_PLAN
 	INIT_MUTEX(&(cp->data_guard));
 
 	LOCK_MUTEX(&(cp->data_guard));
+	#endif
 	initMultiWrapper(&(cp->in));
 	initMultiWrapper(&(cp->out));
+	#ifdef BOARD_TYPE_FLEXSEA_PLAN
 	UNLOCK_MUTEX(&(cp->data_guard));
+	#endif
 
 	circ_buff_init(&cp->circularBuff);
 }
@@ -121,13 +125,17 @@ uint8_t tryParse(MultiCommPeriph *cp) {
 	cp->bytesReadyFlag--;	// = 0;
 	uint8_t error = 0;
 
+	#ifdef BOARD_TYPE_FLEXSEA_PLAN
 	LOCK_MUTEX(&(cp->data_guard));
+	#endif
 	uint16_t numBytesConverted = \
 			unpack_multi_payload_cb(&cp->circularBuff, &cp->in);
 
 	if(numBytesConverted > 0)
 		error = circ_buff_move_head(&cp->circularBuff, numBytesConverted);
+	#ifdef BOARD_TYPE_FLEXSEA_PLAN
 	UNLOCK_MUTEX(&(cp->data_guard));
+	#endif
 
 	uint8_t retCode = 0;
 	retCode |= (error ? 2 : 0);
@@ -226,7 +234,9 @@ uint8_t receiveAndFillResponse(uint8_t cmd_7bits, uint8_t pType, MultiPacketInfo
 
 	uint8_t error = 0;
 	//If there is a response we need to route it or w/e
+	#ifdef BOARD_TYPE_FLEXSEA_PLAN
 	LOCK_MUTEX(&(cp->data_guard));
+	#endif
 	if(cp->out.unpackedIdx + MULTI_PACKET_OVERHEAD >= UNPACKED_BUFF_SIZE) {
 		error = 1; // raise an error flag
 	}	else if (cp->out.unpackedIdx) {
@@ -239,7 +249,9 @@ uint8_t receiveAndFillResponse(uint8_t cmd_7bits, uint8_t pType, MultiPacketInfo
 		cp->out.currentMultiPacket = cp->in.currentMultiPacket;
 	}
 	cp->in.frameMap = 0;
+	#ifdef BOARD_TYPE_FLEXSEA_PLAN
 	UNLOCK_MUTEX(&(cp->data_guard));
+	#endif
 	return error;
 }
 
@@ -275,11 +287,11 @@ uint8_t parseReadyMultiString(MultiCommPeriph* cp)
 		cp->in.destinationPort = PORT_NONE;	//We are home
 
 		//TODO: figure out how to determine if message is actually from slave
-#ifdef BOARD_TYPE_FLEXSEA_PLAN
+		#ifdef BOARD_TYPE_FLEXSEA_PLAN
 		pType = RX_PTYPE_REPLY;
-#else
+		#else
 		pType = (cp_str[MP_CMD1] & 0x01) ? RX_PTYPE_READ : RX_PTYPE_WRITE;
-#endif
+		#endif
 		//It's addressed to me. Function pointer array will call
 		//the appropriate handler (as defined in flexsea_system):
 		if((cmd_7bits <= MAX_CMD_CODE) && (pType <= RX_PTYPE_MAX_INDEX))
