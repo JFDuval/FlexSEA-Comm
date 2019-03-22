@@ -106,14 +106,14 @@ void initMultiPeriph(MultiCommPeriph *cp, Port port, PortType pt)
 	cp->parsingCachedIndex = 0;
 
 	#ifdef BOARD_TYPE_FLEXSEA_PLAN
-	INIT_MUTEX(&(cp->data_guard));
+//	INIT_MUTEX(&(cp->data_guard));
 
-	LOCK_MUTEX(&(cp->data_guard));
+//	LOCK_MUTEX(&(cp->data_guard));
 	#endif
 	initMultiWrapper(&(cp->in));
 	initMultiWrapper(&(cp->out));
 	#ifdef BOARD_TYPE_FLEXSEA_PLAN
-	UNLOCK_MUTEX(&(cp->data_guard));
+//	UNLOCK_MUTEX(&(cp->data_guard));
 	#endif
 
 	circ_buff_init(&cp->circularBuff);
@@ -126,7 +126,7 @@ uint8_t tryParse(MultiCommPeriph *cp) {
 	uint8_t error = 0;
 
 	#ifdef BOARD_TYPE_FLEXSEA_PLAN
-	LOCK_MUTEX(&(cp->data_guard));
+//	LOCK_MUTEX(&(cp->data_guard));
 	#endif
 	uint16_t numBytesConverted = \
 			unpack_multi_payload_cb(&cp->circularBuff, &cp->in);
@@ -134,7 +134,7 @@ uint8_t tryParse(MultiCommPeriph *cp) {
 	if(numBytesConverted > 0)
 		error = circ_buff_move_head(&cp->circularBuff, numBytesConverted);
 	#ifdef BOARD_TYPE_FLEXSEA_PLAN
-	UNLOCK_MUTEX(&(cp->data_guard));
+//	UNLOCK_MUTEX(&(cp->data_guard));
 	#endif
 
 	uint8_t retCode = 0;
@@ -235,7 +235,7 @@ uint8_t receiveAndFillResponse(uint8_t cmd_7bits, uint8_t pType, MultiPacketInfo
 	uint8_t error = 0;
 	//If there is a response we need to route it or w/e
 	#ifdef BOARD_TYPE_FLEXSEA_PLAN
-	LOCK_MUTEX(&(cp->data_guard));
+//	//LOCK_MUTEX(&(cp->data_guard));
 	#endif
 	if(cp->out.unpackedIdx + MULTI_PACKET_OVERHEAD >= UNPACKED_BUFF_SIZE) {
 		error = 1; // raise an error flag
@@ -250,7 +250,7 @@ uint8_t receiveAndFillResponse(uint8_t cmd_7bits, uint8_t pType, MultiPacketInfo
 	}
 	cp->in.frameMap = 0;
 	#ifdef BOARD_TYPE_FLEXSEA_PLAN
-	UNLOCK_MUTEX(&(cp->data_guard));
+////	UNLOCK_MUTEX(&(cp->data_guard));
 	#endif
 	return error;
 }
