@@ -79,7 +79,7 @@ uint8_t payload_parse_str(PacketWrapper* p)
 	{
 		p->destinationPort = PORT_NONE;	//We are home
 		pType = packetType(cp_str);
-
+		
 		//It's addressed to me. Function pointer array will call
 		//the appropriate handler (as defined in flexsea_system):
 		if((cmd_7bits <= MAX_CMD_CODE) && (pType <= RX_PTYPE_MAX_INDEX))
@@ -231,20 +231,20 @@ inline uint8_t tryParseRx(CommPeriph *cp, PacketWrapper *pw)
 			cp->rx.circularBuff, \
 			cp->rx.packedPtr, \
 			cp->rx.unpackedPtr);
-
+		
 	if(numBytesConverted > 0)
 	{
 		error = circ_buff_move_head(cp->rx.circularBuff, numBytesConverted);
 
-#ifdef USE_PRINTF
+		#ifdef USE_PRINTF
 		if(error)
 			printf() << "circ_buff_move_head error:" << error;
-#endif
+		#endif
 		fillPacketFromCommPeriph(cp, pw);
 		// payload_parse_str returns 2 on successful parse
 		//successfulParse = payload_parse_str(pw) == 2;
 	}
-
+	
 	return numBytesConverted > 0 && !error;
 }
 #endif
