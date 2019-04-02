@@ -51,6 +51,10 @@ extern "C" {
 		#include "serial.h"
 		#include "usb.h"
 		
+	#elif(defined BOARD_TYPE_FLEXSEA_PROTOTYPE)
+		
+		#include "usb.h"
+		
 	#else
 		
 		//Manage or Mn:
@@ -170,7 +174,8 @@ uint8_t receiveFxPacket(Port p) {
 	return receiveFxPacketByPeriph(cp);
 }
 
-#if (defined BOARD_TYPE_FLEXSEA_MANAGE || defined BOARD_TYPE_FLEXSEA_EXECUTE)
+#if (defined BOARD_TYPE_FLEXSEA_MANAGE || defined BOARD_TYPE_FLEXSEA_EXECUTE || \
+	defined BOARD_TYPE_FLEXSEA_PROTOTYPE)
 
 uint8_t transmitFxPacket(Port p)
 {
@@ -253,7 +258,7 @@ uint8_t transmitFxPacket(Port p)
 		}
 		#endif	//BOARD_TYPE_FLEXSEA_MANAGE
 		
-		#ifdef BOARD_TYPE_FLEXSEA_EXECUTE
+		#if(defined BOARD_TYPE_FLEXSEA_EXECUTE || defined BOARD_TYPE_FLEXSEA_PROTOTYPE)
 			
 		if(p == PORT_USB)
 		{
