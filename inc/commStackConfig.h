@@ -7,7 +7,7 @@
 extern "C" {
 #endif
 
-#ifdef BOARD_TYPE_FLEXSEA_EXECUTE
+#if(defined BOARD_TYPE_FLEXSEA_EXECUTE || defined BOARD_TYPE_FLEXSEA_PROTOTYPE)
 
 	#define NUMBER_OF_PORTS					3		//Has to match enum below!
 

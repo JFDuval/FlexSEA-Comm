@@ -108,7 +108,7 @@ uint8_t payload_parse_str(PacketWrapper* p)
 		route(p, SLAVE);
 		#endif
 	}
-	#ifndef BOARD_TYPE_FLEXSEA_EXECUTE
+	#if(defined BOARD_TYPE_FLEXSEA_EXECUTE || defined BOARD_TYPE_FLEXSEA_PROTOTOTYPE)
 	else if(id == ID_SUB2_MATCH)
 	{
 		//For a slave on bus #2:
