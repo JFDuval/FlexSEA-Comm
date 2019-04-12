@@ -63,7 +63,7 @@ extern "C" {
 #include <stdlib.h>
 #include <stdint.h>
 #include <flexsea_comm.h>
-
+#include "log.h"
 #include "flexsea_user_structs.h"
 //****************************************************************************
 // Variable(s)
@@ -92,6 +92,7 @@ struct commSpy_s commSpy1 = {0,0,0,0,0,0,0};
 //Takes payload, adds ESCAPES, checksum, header, ...
 uint8_t comm_gen_str(uint8_t payload[], uint8_t *cstr, uint8_t bytes)
 {
+	LOG(linfo,"Comm string too long, abort");
 	unsigned int i = 0, escapes = 0, idx = 0, total_bytes = 0;
 	uint8_t checksum = 0;
 
@@ -122,7 +123,7 @@ uint8_t comm_gen_str(uint8_t payload[], uint8_t *cstr, uint8_t bytes)
 
 	if((idx + 2) >= COMM_STR_BUF_LEN)
 	{
-		//Too long, abort:
+		LOG(lwarning,"Comm string too long, abort");
 		memset(cstr, 0, COMM_STR_BUF_LEN);	//Clear string
 		return 0;
 	}
@@ -179,6 +180,7 @@ void generateRandomUint8_tArray(uint8_t *arr, uint8_t size)
 
 uint16_t unpack_payload_cb(circularBuffer_t *cb, uint8_t *packed, uint8_t unpacked[PACKAGED_PAYLOAD_LEN])
 {
+	LOG(linfo,"unpack_payload_cb called");
 	int bufSize = circ_buff_get_size(cb);
 
 	int foundString = 0, foundFrame = 0, bytes, possibleFooterPos;
@@ -197,6 +199,7 @@ uint16_t unpack_payload_cb(circularBuffer_t *cb, uint8_t *packed, uint8_t unpack
 		foundFrame = 0;
 		if(headerPos <= lastPossibleHeaderIndex)
 		{
+			LOG(ldebug2,"Last possible header");
 			bytes = circ_buff_peak(cb, headerPos + 1);
 			possibleFooterPos = headerPos + 3 + bytes;
 			foundFrame = (possibleFooterPos < bufSize && circ_buff_peak(cb, possibleFooterPos) == FOOTER);
@@ -204,6 +207,7 @@ uint16_t unpack_payload_cb(circularBuffer_t *cb, uint8_t *packed, uint8_t unpack
 
 		if(foundFrame)
 		{
+			LOG(ldebug2,"Frame found");
 			footers++;
 			checksum = circ_buff_checksum(cb, headerPos+2, possibleFooterPos-1);
 
@@ -218,6 +222,7 @@ uint16_t unpack_payload_cb(circularBuffer_t *cb, uint8_t *packed, uint8_t unpack
 	int numBytesInPackedString = 0;
 	if(foundString)
 	{
+		LOG(ldebug2,"String found");
 		numBytesInPackedString = headerPos + bytes + 4;
 
 		circ_buff_read_section(cb, packed, headerPos, bytes + 4);
@@ -244,6 +249,7 @@ uint16_t unpack_payload_cb(circularBuffer_t *cb, uint8_t *packed, uint8_t unpack
 //From CommPeriph to PacketWrapper:
 void fillPacketFromCommPeriph(CommPeriph *cp, PacketWrapper *pw)
 {
+	LOG(ldebug1,"fillPacketFromCommPeriph called");
 	pw->sourcePort = cp->port;
 	if(cp->portType == MASTER)
 	{
@@ -264,6 +270,7 @@ void fillPacketFromCommPeriph(CommPeriph *cp, PacketWrapper *pw)
 //ToDo: delete 'TravelDirection td'?
 void copyPacket(PacketWrapper *from, PacketWrapper *to, TravelDirection td)
 {
+	LOG(ldebug1,"copyPacket called");
 	(void)td;
 	to->sourcePort = from->sourcePort;
 	to->destinationPort = from->destinationPort;
@@ -277,6 +284,7 @@ void initCommPeriph(CommPeriph *cp, Port port, PortType pt, \
 					uint8_t *unpacked, uint8_t *packed, circularBuffer_t* rx_cb, \
 					PacketWrapper *inbound, PacketWrapper *outbound)
 {
+	LOG(linfo,"initCommPeriph called");
 	cp->port = port;
 	cp->portType = pt;
 	cp->transState = TS_UNKNOWN;
@@ -302,6 +310,7 @@ void initCommPeriph(CommPeriph *cp, Port port, PortType pt, \
 void linkCommPeriphPacketWrappers(CommPeriph *cp, PacketWrapper *inbound, \
 					PacketWrapper *outbound)
 {
+	LOG(linfo,"linkCommPeriphPacketWrappers called");
 	//Force family:
 	cp->in = inbound;
 	cp->out = outbound;
@@ -311,6 +320,7 @@ void linkCommPeriphPacketWrappers(CommPeriph *cp, PacketWrapper *inbound, \
 	//Children inherit from parent:
 	if(cp->portType == MASTER)
 	{
+		LOG(linfo,"Port type: Master");
 		inbound->travelDir = DOWNSTREAM;
 		inbound->sourcePort = cp->port;
 		inbound->destinationPort = PORT_NONE;
@@ -321,6 +331,7 @@ void linkCommPeriphPacketWrappers(CommPeriph *cp, PacketWrapper *inbound, \
 	}
 	else
 	{
+		LOG(linfo,"Port type: Slave");
 		inbound->travelDir = UPSTREAM;
 		inbound->sourcePort = cp->port;
 		inbound->destinationPort = PORT_NONE;

@@ -2,9 +2,8 @@
 #include "flexsea_multi_frame_packet_def.h"
 #include "flexsea_comm_multi.h"
 #include "flexsea_circular_buffer.h"
-
 #include <string.h>
-
+#include "log.h"
 typedef struct MultiInfoByte_struct {
 	uint8_t packetId;
 	uint8_t frameId;
@@ -26,6 +25,7 @@ void circ_buff_copyToUnpacked(circularBuffer_t* cb, int headerPos, int bytes, Mu
 
 uint16_t unpack_multi_payload_cb(circularBuffer_t *cb, MultiWrapper* p)
 {
+	LOG(ldebug3,"Unloading payload");
     int foundString = 0;
     int lastPossibleHeaderIndex = circ_buff_get_size(cb) - MULTI_NUM_OVERHEAD_BYTES_FRAME;
     int headerPos = -1;

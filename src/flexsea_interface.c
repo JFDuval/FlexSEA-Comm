@@ -42,6 +42,7 @@ extern "C" {
 #include "flexsea_payload.h"
 #include "flexsea_circular_buffer.h"
 #include "user-mn.h"
+#include "log.h"
 
 #ifndef BOARD_TYPE_FLEXSEA_PLAN
 
@@ -197,6 +198,7 @@ uint8_t transmitFxPacket(Port p)
 			// if its not valid we just discard the multi packet frames, setting the flags accordingly
 			cp->out.frameMap = 0;
 			cp->out.isMultiComplete = 1;
+			LOG(lerror,"More frames expected than possible")
 			return 1;	// return an error
 		}
 

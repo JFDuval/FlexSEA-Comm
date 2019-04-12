@@ -40,7 +40,7 @@ extern "C" {
 #include <string.h>
 #include <flexsea_payload.h>
 #include <flexsea_board.h>
-
+#include "log.h"
 //****************************************************************************
 // Variable(s)
 //****************************************************************************
@@ -202,16 +202,10 @@ inline uint8_t tryParseRx(CommPeriph *cp, PacketWrapper *pw)
 	if(numBytesConverted > 0)
 	{
 		error = circ_buff_move_head(cp->rx.circularBuff, numBytesConverted);
+		if(error){
+			LOG(lerror,"circ_buff_move_head error %u", error);
+		}
 
-		#ifdef USE_PRINTF
-
-			if(error){printf() << "circ_buff_move_head error:" << error;}
-
-		#else
-
-			(void)error;
-
-		#endif
 
 		fillPacketFromCommPeriph(cp, pw);
 		// payload_parse_str returns 2 on successful parse
@@ -236,10 +230,10 @@ inline uint8_t tryParseRx(CommPeriph *cp, PacketWrapper *pw)
 	{
 		error = circ_buff_move_head(cp->rx.circularBuff, numBytesConverted);
 
-		#ifdef USE_PRINTF
 		if(error)
-			printf() << "circ_buff_move_head error:" << error;
-		#endif
+		{
+			LOG(lerror,"circ_buff_move_head error %u", error);
+		}
 		fillPacketFromCommPeriph(cp, pw);
 		// payload_parse_str returns 2 on successful parse
 		//successfulParse = payload_parse_str(pw) == 2;

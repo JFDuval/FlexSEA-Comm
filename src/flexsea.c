@@ -53,7 +53,7 @@ extern "C" {
 //****************************************************************************
 
 #include <flexsea.h>
-
+#include "log.h"
 //****************************************************************************
 // Variable(s)
 //****************************************************************************
@@ -77,12 +77,14 @@ void (*flexsea_multipayload_ptr[MAX_CMD_CODE][RX_PTYPE_MAX_INDEX+1]) \
 //When something goes wrong in the code it will land here:
 unsigned int flexsea_error(unsigned int err_code)
 {
+	LOG(lerror,"The following error code has occured %u",err_code);
 	//ToDo something useful
 	return err_code;
 }
 
 void fillMultiInfoFromBuf(MultiPacketInfo *mInfo, uint8_t* buf, uint8_t* info)
 {
+	LOG(ldebug3,"fillMultiInfoFromBuf called");
 	mInfo->portIn = info[0];
 //	mInfo->portOut = info[1];
 	mInfo->xid = buf[P_XID];
@@ -92,6 +94,7 @@ void fillMultiInfoFromBuf(MultiPacketInfo *mInfo, uint8_t* buf, uint8_t* info)
 //Splits 1 uint16 in 2 bytes, stores them in buf[index] and increments index
 inline void SPLIT_16(uint16_t var, uint8_t *buf, uint16_t *index)
 {
+	LOG(ldebug4,"SPLIT_16 called");
 	buf[*index] = (uint8_t) ((var >> 8) & 0xFF);
 	buf[(*index)+1] = (uint8_t) (var & 0xFF);
 	(*index) += 2;
@@ -100,6 +103,7 @@ inline void SPLIT_16(uint16_t var, uint8_t *buf, uint16_t *index)
 //Inverse of SPLIT_16()
 uint16_t REBUILD_UINT16(uint8_t *buf, uint16_t *index)
 {
+	LOG(ldebug4,"REBUILD_UINT16 called");
 	uint16_t tmp = 0;
 
 	tmp = (((uint16_t)buf[(*index)] << 8) + ((uint16_t)buf[(*index)+1] ));
@@ -110,6 +114,7 @@ uint16_t REBUILD_UINT16(uint8_t *buf, uint16_t *index)
 //Splits 1 uint32 in 4 bytes, stores them in buf[index] and increments index
 inline void SPLIT_32(uint32_t var, uint8_t *buf, uint16_t *index)
 {
+	LOG(ldebug4,"SPLIT_32 called");
 	buf[(*index)] = (uint8_t) ((var >> 24) & 0xFF);
 	buf[(*index)+1] = (uint8_t) ((var >> 16) & 0xFF);
 	buf[(*index)+2] = (uint8_t) ((var >> 8) & 0xFF);
@@ -120,8 +125,8 @@ inline void SPLIT_32(uint32_t var, uint8_t *buf, uint16_t *index)
 //Inverse of SPLIT_32()
 uint32_t REBUILD_UINT32(uint8_t *buf, uint16_t *index)
 {
+	LOG(ldebug4,"REBUILD_UINT32 called");
 	uint32_t tmp = 0;
-
 	tmp = (((uint32_t)buf[(*index)] << 24) + ((uint32_t)buf[(*index)+1] << 16) \
 			+ ((uint32_t)buf[(*index)+2] << 8) + ((uint32_t)buf[(*index)+3]));
 	(*index) += 4;
