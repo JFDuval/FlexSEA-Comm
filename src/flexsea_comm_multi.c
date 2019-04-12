@@ -69,7 +69,7 @@ extern "C" {
 #include "flexsea_device_spec.h"
 #include "flexsea_user_structs.h"
 #include "flexsea_multi_circbuff.h"
-
+#include "log.h"
 //****************************************************************************
 // Variable(s)
 //****************************************************************************
@@ -86,6 +86,7 @@ MultiCommPeriph comm_multi_periph[NUMBER_OF_PORTS];
 
 void initMultiWrapper(MultiWrapper *w)
 {
+	LOG(linfo,"initMultiWrapper called");
 	int i;
 	for(i=0;i<MAX_FRAMES_PER_MULTI_PACKET;i++)
 		memset(&(w->packed[i][0]), 0, PACKET_WRAPPER_LEN);
@@ -97,6 +98,7 @@ void initMultiWrapper(MultiWrapper *w)
 //Initialize CommPeriph to defaults:
 void initMultiPeriph(MultiCommPeriph *cp, Port port, PortType pt)
 {
+	LOG(linfo,"initMultiPeriph called");
 	cp->port = port;
 	cp->portType = pt;
 	cp->transState = TS_UNKNOWN;
@@ -120,8 +122,11 @@ void initMultiPeriph(MultiCommPeriph *cp, Port port, PortType pt)
 }
 
 uint8_t tryParse(MultiCommPeriph *cp) {
-	if(!(cp->bytesReadyFlag > 0)) return 1;
-
+	if(!(cp->bytesReadyFlag > 0))
+	{
+		LOG(ldebug1,"cp->bytesReadyFlag %u is smaller than 0",cp->bytesReadyFlag )
+		return 1;
+	}
 	cp->bytesReadyFlag--;	// = 0;
 	uint8_t error = 0;
 
@@ -160,7 +165,7 @@ void setMsgInfo(uint8_t* outbuf, uint8_t xid, uint8_t rid, uint8_t cmdcode, uint
 //returns 1 on error, 0 on success
 #define BYTE_NEEDS_ESCAPE(x) (((x) == MULTI_SOF) || ((x) == MULTI_EOF) || ((x) == MULTI_ESC))
 uint8_t packMultiPacket(MultiWrapper* p) {
-
+	LOG(ldebug3,"packMultiPacket called")
 	//space per frame that we can fit the underlying unpacked string into
 	const uint16_t SPACE = PACKET_WRAPPER_LEN - MULTI_NUM_OVERHEAD_BYTES_FRAME;
 
@@ -203,9 +208,11 @@ uint8_t packMultiPacket(MultiWrapper* p) {
 	}
 	//check if it all fit in our multi packet
 	if(frameId >= MAX_FRAMES_PER_MULTI_PACKET)
+	{
 		//if it did not all fit we return an error
+		LOG(lerror,"Not all the data fit into the frame")
 		return 1;
-
+	}
 	// if it did all fit we just need to fill the multiInfo byte now that we know how many frames we have
 	// frameId now holds the id of the last frame in the packet
 	uint8_t lastFrameIdInPacket = frameId;
@@ -225,6 +232,7 @@ uint8_t packMultiPacket(MultiWrapper* p) {
 
 uint8_t receiveAndFillResponse(uint8_t cmd_7bits, uint8_t pType, MultiPacketInfo* info, MultiCommPeriph* cp)
 {
+	LOG(linfo,"receiveAndFillResponse called")
 	// initialize the response length to 0
 	// Our index is the length of response.
 	cp->out.unpackedIdx = 0;
@@ -238,8 +246,10 @@ uint8_t receiveAndFillResponse(uint8_t cmd_7bits, uint8_t pType, MultiPacketInfo
 //	//LOCK_MUTEX(&(cp->data_guard));
 	#endif
 	if(cp->out.unpackedIdx + MULTI_PACKET_OVERHEAD >= UNPACKED_BUFF_SIZE) {
+		LOG(lerror,"More data than expected unpacked")
 		error = 1; // raise an error flag
-	}	else if (cp->out.unpackedIdx) {
+	}
+	else if (cp->out.unpackedIdx) {
 		//TODO: fill with an actual cross device timestamp
 		setMsgInfo(cp->out.unpacked, info->rid, info->xid, cmd_7bits, RX_PTYPE_REPLY, *fx_dev_timestamp);
 		// adjust the index, as this now represents the length including reserved bytes
@@ -247,6 +257,10 @@ uint8_t receiveAndFillResponse(uint8_t cmd_7bits, uint8_t pType, MultiPacketInfo
 
 		// set multipacket id's to match
 		cp->out.currentMultiPacket = cp->in.currentMultiPacket;
+	}
+	else
+	{
+		LOG(lerror,"Invalid cp pointer")
 	}
 	cp->in.frameMap = 0;
 	#ifdef BOARD_TYPE_FLEXSEA_PLAN
@@ -259,6 +273,7 @@ uint8_t receiveAndFillResponse(uint8_t cmd_7bits, uint8_t pType, MultiPacketInfo
 // Just note that this only works if this device is communicating with plan.
 uint8_t parseReadyMultiString(MultiCommPeriph* cp)
 {
+	LOG(linfo,"parseReadyMultiString called")
 	// ensure multi is actually ready to be parsed
 	if(!cp->in.isMultiComplete) return PARSE_DEFAULT;
 
@@ -298,7 +313,10 @@ uint8_t parseReadyMultiString(MultiCommPeriph* cp)
 		{
 			uint8_t error = receiveAndFillResponse(cmd_7bits, pType, &info, cp);
 			if(error)
+			{
+				LOG(lerror,"Error recieving string occured")
 				return PARSE_DEFAULT;
+			}
 		}
 	}
 	else if(cp->in.unpacked[MP_RID] == 0 && cmd_7bits == CMD_SYSDATA)
@@ -306,7 +324,10 @@ uint8_t parseReadyMultiString(MultiCommPeriph* cp)
 		cp->in.unpacked[MP_DATA1] = SYSDATA_WHO_AM_I_FLAG; // results in whoami msg
 		uint8_t error = receiveAndFillResponse(cmd_7bits, RX_PTYPE_READ, &info, cp);
 		if(error)
+		{
+			LOG(lerror,"Error recieving who am i message occured")
 			return PARSE_DEFAULT;
+		}
 	}
 	// else give up
 	return PARSE_SUCCESSFUL;
@@ -314,6 +335,7 @@ uint8_t parseReadyMultiString(MultiCommPeriph* cp)
 
 void resetToPacketId(MultiWrapper* p, uint8_t id)
 {
+	LOG(ldebug4,"resetToPacketId called")
 	p->currentMultiPacket = id;
 	p->unpackedIdx = 0;
 	p->frameMap = 0;
