@@ -260,7 +260,7 @@ uint8_t receiveAndFillResponse(uint8_t cmd_7bits, uint8_t pType, MultiPacketInfo
 	}
 	else
 	{
-		LOG(lerror,"Invalid cp pointer")
+		LOG(ldebug2,"Empty unpack array")
 	}
 	cp->in.frameMap = 0;
 	#ifdef BOARD_TYPE_FLEXSEA_PLAN
