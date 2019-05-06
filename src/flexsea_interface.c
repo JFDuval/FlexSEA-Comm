@@ -229,7 +229,8 @@ uint8_t transmitFxPacket(Port p)
 					puts_uart_xb24c(data, datalen);
 					#endif
 				}
-
+				UNUSED(datalen);
+				UNUSED(data);
 				success = 1;
 			}
 			else
