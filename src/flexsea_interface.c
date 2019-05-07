@@ -198,7 +198,7 @@ uint8_t transmitFxPacket(Port p)
 			// if its not valid we just discard the multi packet frames, setting the flags accordingly
 			cp->out.frameMap = 0;
 			cp->out.isMultiComplete = 1;
-			LOG(lerror,"More frames expected than possible")
+			LOG(lerror,"More frames expected than possible");
 			return 1;	// return an error
 		}
 

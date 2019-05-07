@@ -124,7 +124,7 @@ void initMultiPeriph(MultiCommPeriph *cp, Port port, PortType pt)
 uint8_t tryParse(MultiCommPeriph *cp) {
 	if(!(cp->bytesReadyFlag > 0))
 	{
-		LOG(ldebug1,"cp->bytesReadyFlag %u is smaller than 0",cp->bytesReadyFlag )
+		LOG(ldebug1,"cp->bytesReadyFlag %u is smaller than 0",cp->bytesReadyFlag );
 		return 1;
 	}
 	cp->bytesReadyFlag--;	// = 0;
@@ -165,7 +165,7 @@ void setMsgInfo(uint8_t* outbuf, uint8_t xid, uint8_t rid, uint8_t cmdcode, uint
 //returns 1 on error, 0 on success
 #define BYTE_NEEDS_ESCAPE(x) (((x) == MULTI_SOF) || ((x) == MULTI_EOF) || ((x) == MULTI_ESC))
 uint8_t packMultiPacket(MultiWrapper* p) {
-	LOG(ldebug3,"packMultiPacket called")
+	LOG(ldebug3,"packMultiPacket called");
 	//space per frame that we can fit the underlying unpacked string into
 	const uint16_t SPACE = PACKET_WRAPPER_LEN - MULTI_NUM_OVERHEAD_BYTES_FRAME;
 
@@ -210,7 +210,7 @@ uint8_t packMultiPacket(MultiWrapper* p) {
 	if(frameId >= MAX_FRAMES_PER_MULTI_PACKET)
 	{
 		//if it did not all fit we return an error
-		LOG(lerror,"Not all the data fit into the frame")
+		LOG(lerror,"Not all the data fit into the frame");
 		return 1;
 	}
 	// if it did all fit we just need to fill the multiInfo byte now that we know how many frames we have
@@ -232,7 +232,7 @@ uint8_t packMultiPacket(MultiWrapper* p) {
 
 uint8_t receiveAndFillResponse(uint8_t cmd_7bits, uint8_t pType, MultiPacketInfo* info, MultiCommPeriph* cp)
 {
-	LOG(linfo,"receiveAndFillResponse called")
+	LOG(linfo,"receiveAndFillResponse called");
 	// initialize the response length to 0
 	// Our index is the length of response.
 	cp->out.unpackedIdx = 0;
@@ -246,7 +246,7 @@ uint8_t receiveAndFillResponse(uint8_t cmd_7bits, uint8_t pType, MultiPacketInfo
 //	//LOCK_MUTEX(&(cp->data_guard));
 	#endif
 	if(cp->out.unpackedIdx + MULTI_PACKET_OVERHEAD >= UNPACKED_BUFF_SIZE) {
-		LOG(lerror,"More data than expected unpacked")
+		LOG(lerror,"More data than expected unpacked");
 		error = 1; // raise an error flag
 	}
 	else if (cp->out.unpackedIdx) {
@@ -260,7 +260,7 @@ uint8_t receiveAndFillResponse(uint8_t cmd_7bits, uint8_t pType, MultiPacketInfo
 	}
 	else
 	{
-		LOG(ldebug2,"Empty unpack array")
+		LOG(ldebug2,"Empty unpack array");
 	}
 	cp->in.frameMap = 0;
 	#ifdef BOARD_TYPE_FLEXSEA_PLAN
@@ -273,7 +273,7 @@ uint8_t receiveAndFillResponse(uint8_t cmd_7bits, uint8_t pType, MultiPacketInfo
 // Just note that this only works if this device is communicating with plan.
 uint8_t parseReadyMultiString(MultiCommPeriph* cp)
 {
-	LOG(linfo,"parseReadyMultiString called")
+	LOG(linfo,"parseReadyMultiString called");
 	// ensure multi is actually ready to be parsed
 	if(!cp->in.isMultiComplete) return PARSE_DEFAULT;
 
@@ -314,7 +314,7 @@ uint8_t parseReadyMultiString(MultiCommPeriph* cp)
 			uint8_t error = receiveAndFillResponse(cmd_7bits, pType, &info, cp);
 			if(error)
 			{
-				LOG(lerror,"Error recieving string occured")
+				LOG(lerror,"Error recieving string occured");
 				return PARSE_DEFAULT;
 			}
 		}
@@ -325,7 +325,7 @@ uint8_t parseReadyMultiString(MultiCommPeriph* cp)
 		uint8_t error = receiveAndFillResponse(cmd_7bits, RX_PTYPE_READ, &info, cp);
 		if(error)
 		{
-			LOG(lerror,"Error recieving who am i message occured")
+			LOG(lerror,"Error recieving who am i message occured");
 			return PARSE_DEFAULT;
 		}
 	}
@@ -335,7 +335,7 @@ uint8_t parseReadyMultiString(MultiCommPeriph* cp)
 
 void resetToPacketId(MultiWrapper* p, uint8_t id)
 {
-	LOG(ldebug4,"resetToPacketId called")
+	LOG(ldebug4,"resetToPacketId called");
 	p->currentMultiPacket = id;
 	p->unpackedIdx = 0;
 	p->frameMap = 0;
