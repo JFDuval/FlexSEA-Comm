@@ -206,7 +206,9 @@ uint8_t transmitFxPacket(Port p)
 		#ifdef BOARD_TYPE_FLEXSEA_MANAGE
 		if(p == PORT_WIRELESS || p == PORT_BWC)
 		{
-			uint8_t isReady = readyToTransfer(p);
+			// TODO: readyToTransfer function does not appear to be complete
+			// just saying always ready for now
+			uint8_t isReady = 1; //readyToTransfer(p);
 			if(isReady)
 			{
 				uint8_t *data = &(cp->out.packed[frameId][0]);
