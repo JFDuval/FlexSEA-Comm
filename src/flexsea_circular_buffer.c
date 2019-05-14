@@ -71,7 +71,7 @@ int circ_buff_write(circularBuffer_t* cb, uint8_t *writeFrom, uint16_t numBytes)
 
 	if(cb->size > CB_BUF_LEN)
 	{
-		LOG(lwarning, "CB has been overwritten")
+		LOG(lwarning, "CB has been overwritten");
 		cb->size = CB_BUF_LEN;
 		cb->head = cb->tail;
 		return OVERWROTE;
