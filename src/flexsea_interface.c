@@ -124,7 +124,7 @@ uint8_t receiveFlexSEABytes(uint8_t *d, uint8_t len, uint8_t autoParse)
 {
 	circ_buff_write(commPeriph[PORT_USB].rx.circularBuff, d, len);
 	commPeriph[PORT_USB].rx.bytesReadyFlag++;
-
+	//tryParseRx
 	//Parse if needed:
 	if(autoParse){receiveFlexSEAPacket(PORT_USB, &npFlag, &ppFlag, &noWatch);}
 
