@@ -198,7 +198,7 @@ uint8_t transmitFxPacket(Port p)
 			// if its not valid we just discard the multi packet frames, setting the flags accordingly
 			cp->out.frameMap = 0;
 			cp->out.isMultiComplete = 1;
-			LOG(lerror,"More frames expected than possible")
+			LOG(lerror,"More frames expected than possible");
 			return 1;	// return an error
 		}
 
@@ -206,7 +206,9 @@ uint8_t transmitFxPacket(Port p)
 		#ifdef BOARD_TYPE_FLEXSEA_MANAGE
 		if(p == PORT_WIRELESS || p == PORT_BWC)
 		{
-			uint8_t isReady = readyToTransfer(p);
+			// TODO: readyToTransfer function does not appear to be complete
+			// just saying always ready for now
+			uint8_t isReady = 1; //readyToTransfer(p);
 			if(isReady)
 			{
 				uint8_t *data = &(cp->out.packed[frameId][0]);
@@ -229,7 +231,8 @@ uint8_t transmitFxPacket(Port p)
 					puts_uart_xb24c(data, datalen);
 					#endif
 				}
-
+				UNUSED(datalen);
+				UNUSED(data);
 				success = 1;
 			}
 			else
