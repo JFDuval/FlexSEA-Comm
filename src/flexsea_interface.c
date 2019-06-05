@@ -257,9 +257,16 @@ uint8_t transmitFxPacket(Port p)
 		}
 		else if(p == PORT_USB)
 		{
-			#ifdef USE_USB
+			// route traffic to GUI through debug uart on the BMS
+		#ifdef BOARD_SUBTYPE_HABSOLUTE
+			// handle habsolute and bms like normal usarts
+			uint8_t *data = &(cp->out.packed[frameId][0]);
+			uint16_t datalen = SIZE_OF_MULTIFRAME(cp->out.packed[frameId]);
+			usart_transmit(DEBUG_USART, data, datalen);
+			success = 1;
+		#else
 			success = !CDC_CheckBusy_FS() && USBD_OK == CDC_Transmit_FS(cp->out.packed[frameId], SIZE_OF_MULTIFRAME(cp->out.packed[frameId]));
-			#endif
+		#endif
 		}
 		else
 		{
