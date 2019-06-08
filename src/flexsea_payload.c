@@ -341,6 +341,7 @@ uint8_t get_rid(uint8_t *pldata)
 	}
 
 	//If we end up here it's because we didn't get a match:
+	LOG(lwarning,"No matching id found");
 	return ID_NO_MATCH;
 }
 
