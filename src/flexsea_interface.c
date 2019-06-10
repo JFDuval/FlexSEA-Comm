@@ -258,7 +258,7 @@ uint8_t transmitFxPacket(Port p)
 		else if(p == PORT_USB)
 		{
 			// route traffic to GUI through debug uart on the BMS
-		#ifdef BOARD_SUBTYPE_HABSOLUTE
+		#ifdef BOARD_SUBTYPE_BMS
 			// handle habsolute and bms like normal usarts
 			uint8_t *data = &(cp->out.packed[frameId][0]);
 			uint16_t datalen = SIZE_OF_MULTIFRAME(cp->out.packed[frameId]);
