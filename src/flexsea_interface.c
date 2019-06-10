@@ -65,10 +65,7 @@ extern "C" {
 			#include "usart.h"
 		#endif // HW_VER < 10)
 
-		//ToDo:
-		#warning "ToDo: this is a hack"
-		#ifndef	BOARD_SUBTYPE_BMS
-		//#ifdef USE_USB	//ToDo enable this
+		#ifdef USE_USB
 		#include "usbd_cdc_if.h"
 		#endif
 		
@@ -260,9 +257,7 @@ uint8_t transmitFxPacket(Port p)
 		}
 		else if(p == PORT_USB)
 		{
-			#warning "ToDo: this is a hack"
-			#ifndef	BOARD_SUBTYPE_BMS
-			//#ifdef USE_USB	//ToDo enable this
+			#ifdef USE_USB
 			success = !CDC_CheckBusy_FS() && USBD_OK == CDC_Transmit_FS(cp->out.packed[frameId], SIZE_OF_MULTIFRAME(cp->out.packed[frameId]));
 			#endif
 		}

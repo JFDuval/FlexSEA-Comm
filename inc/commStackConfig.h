@@ -22,7 +22,7 @@ extern "C" {
 
 #else
 
-	#ifdef BOARD_SUBTYPE_HABSOLUTE
+	#if (defined BOARD_SUBTYPE_HABSOLUTE || defined BOARD_SUBTYPE_BMS)
 
 		#define NUMBER_OF_PORTS					1		//Has to match enum below!
 
