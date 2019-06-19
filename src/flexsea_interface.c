@@ -215,24 +215,31 @@ uint8_t transmitFxPacket(Port p)
 			{
 				uint8_t *data = &(cp->out.packed[frameId][0]);
 				uint16_t datalen = SIZE_OF_MULTIFRAME(cp->out.packed[frameId]);
+				// bilateral data does not use this on rigid 3.0
+				#if (HW_VER < 30)
+					//ToDo replace with mapping function:
+					if(p == PORT_WIRELESS)
+					{
+						#ifdef USE_UART3
+						puts_expUart(data, datalen);
+						#endif
 
-				//ToDo replace with mapping function:
-				if(p == PORT_WIRELESS)
-				{
-					#ifdef USE_UART3
-					puts_expUart(data, datalen);
-					#endif
-
-					#ifdef USE_UART4
-					puts_expUart2(data, datalen);
-					#endif
-				}
-				else if(p == PORT_BWC)
-				{
-					#ifdef USE_XB24C
-					puts_uart_xb24c(data, datalen);
-					#endif
-				}
+						#ifdef USE_UART4
+						puts_expUart2(data, datalen);
+						#endif
+					}
+					else if(p == PORT_BWC)
+					{
+						#ifdef USE_XB24C
+						puts_uart_xb24c(data, datalen);
+						#endif
+					}
+				#else
+					if(p == PORT_WIRELESS)
+					{
+						puts_expUart2(data, datalen);
+					}
+				#endif // (HW_VER < 30)
 				UNUSED(datalen);
 				UNUSED(data);
 				success = 1;
