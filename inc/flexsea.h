@@ -122,7 +122,7 @@ typedef enum {
 	TS_TRANSMIT_THEN_RECEIVE,
 	TS_PREP_TO_RECEIVE,
 	TS_RECEIVE
-}TransceiverSate;
+}TransceiverState;
 
 typedef enum {
 	UNKNOWN_TRAVEL_DIR = 0,
@@ -188,7 +188,7 @@ typedef struct
 	//Peripheral state and info:
 	Port port;
 	PortType portType;
-	TransceiverSate transState;
+	TransceiverState transState;
 
 	//Specific for RX or TX:
 	CommPeriphSub rx;

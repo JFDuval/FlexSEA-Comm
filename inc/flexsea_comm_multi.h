@@ -58,7 +58,7 @@ typedef struct MultiCommPeriph_struct
 	//Peripheral state and info:
 	Port port;
 	PortType portType;
-	TransceiverSate transState;
+	TransceiverState transState;
 
 	uint8_t bytesReadyFlag;
 	uint8_t unpackedPacketsAvailable;
