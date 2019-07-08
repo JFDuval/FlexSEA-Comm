@@ -64,8 +64,10 @@ extern "C" {
 		#else
 			#include "usart.h"
 		#endif // HW_VER < 10)
-		
+
+		#ifdef USE_USB
 		#include "usbd_cdc_if.h"
+		#endif
 		
 	#endif
 	
@@ -213,24 +215,31 @@ uint8_t transmitFxPacket(Port p)
 			{
 				uint8_t *data = &(cp->out.packed[frameId][0]);
 				uint16_t datalen = SIZE_OF_MULTIFRAME(cp->out.packed[frameId]);
+				// bilateral data does not use this on rigid 3.0
+				#if (HW_VER < 20)
+					//ToDo replace with mapping function:
+					if(p == PORT_WIRELESS)
+					{
+						#ifdef USE_UART3
+						puts_expUart(data, datalen);
+						#endif
 
-				//ToDo replace with mapping function:
-				if(p == PORT_WIRELESS)
-				{
-					#ifdef USE_UART3
-					puts_expUart(data, datalen);
-					#endif
-
-					#ifdef USE_UART4
-					puts_expUart2(data, datalen);
-					#endif
-				}
-				else if(p == PORT_BWC)
-				{
-					#ifdef USE_XB24C
-					puts_uart_xb24c(data, datalen);
-					#endif
-				}
+						#ifdef USE_UART4
+						puts_expUart2(data, datalen);
+						#endif
+					}
+					else if(p == PORT_BWC)
+					{
+						#ifdef USE_XB24C
+						puts_uart_xb24c(data, datalen);
+						#endif
+					}
+				#else
+					if(p == PORT_WIRELESS)
+					{
+						puts_expUart2(data, datalen);
+					}
+				#endif // (HW_VER < 20)
 				UNUSED(datalen);
 				UNUSED(data);
 				success = 1;
@@ -255,7 +264,16 @@ uint8_t transmitFxPacket(Port p)
 		}
 		else if(p == PORT_USB)
 		{
+			// route traffic to GUI through debug uart on the BMS
+		#ifdef BOARD_SUBTYPE_BMS
+			// handle habsolute and bms like normal usarts
+			uint8_t *data = &(cp->out.packed[frameId][0]);
+			uint16_t datalen = SIZE_OF_MULTIFRAME(cp->out.packed[frameId]);
+			usart_transmit(DEBUG_USART, data, datalen);
+			success = 1;
+		#else
 			success = !CDC_CheckBusy_FS() && USBD_OK == CDC_Transmit_FS(cp->out.packed[frameId], SIZE_OF_MULTIFRAME(cp->out.packed[frameId]));
+		#endif
 		}
 		else
 		{
